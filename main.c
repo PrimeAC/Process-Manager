@@ -8,8 +8,8 @@
    ..:::::::::..:::::..:::.......::::......:::........:::::..::::::.......:::::::......::::.......:::
 
 Afonso Caetano 82539
-Bruno Santos
-João Correia
+Bruno Santos 82053
+João Correia 81990
 
 Sistemas Operativos
 */
@@ -18,35 +18,33 @@ Sistemas Operativos
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
+#include "commandlinereader.h"
 
 /*
 Main Program
 */
 
+
 int main(){
 
-  char *c= (char*) malloc(sizeof(c));
-  while(1){
-    scanf("%s",c); /*le o comando inserido pelo utilizador*/
-      
-      if (strcmp(c,"create")==0) {
+  int PID, status;
 
-        continue;
+  PID=fork();
 
-      }
-      if (strcmp(c,"execute")==0){
-        
-        continue;
-        
-      }
-      if (strcmp(c,"kill")==0){
-        
-        continue;
-        
-      }
+  if (PID==0){
+    printf("Filho com PID %d\n",PID);
+
+    exit(0);
+    printf("status no filho=%d\n",status );
+  }
+  else{
+    printf("Pai com PID %d\n",PID);
+    
+    PID=wait(&status);
+    printf("status no pai=%d\n",status );
   }
 
-  free(c);
+printf("END OF PROGRAM\n");
 
 }
 
