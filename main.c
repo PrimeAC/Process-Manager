@@ -32,19 +32,20 @@ int main(){
   PID=fork();
 
   if (PID==0){
-    printf("Filho com PID %d\n",PID);
+    printf("%d\n",getpid());
 
+    printf("Filho com PID %d\n",PID);
     exit(0);
-    printf("status no filho=%d\n",status );
   }
   else{
+
     printf("Pai com PID %d\n",PID);
-    
     PID=wait(&status);
-    printf("status no pai=%d\n",status );
+    printf("%d\n",getpid());
   }
 
 printf("END OF PROGRAM\n");
+return 0;
 
 }
 
