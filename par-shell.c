@@ -48,13 +48,18 @@ int main(int argc, char* argv[]){
       
       if(PID<0){
         printf("ERRO\n");
+        exit(1);
 
       }
 
       if(PID==0){
         printf("%d\n",getpid());
         printf("Filho com PID %d\n",PID);
-        
+        if(execl(argVector[0],argVector[1], argVector[2], argVector[3], argVector[4], argVector[5], argVector[6], NULL)<0){
+        	printf("O exec falhou\n");
+        	exit(1);
+       
+        }
       }
 
       else{
