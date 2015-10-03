@@ -16,6 +16,7 @@ Sistemas Operativos
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <time.h>
 #include "commandlinereader.h"
@@ -27,7 +28,7 @@ Main Program
 
 int main(int argc, char* argv[]){
   char **argVector;
-  int PID, status, vectorSize;
+  int PID;
 
   argVector = (char**) malloc(7*sizeof(char*));
   
