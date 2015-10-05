@@ -28,6 +28,7 @@ Main Program
 
 int main(int argc, char* argv[]){
   char **argVector;
+  
   int PID;
 
   argVector = (char**) malloc(7*sizeof(char*));
