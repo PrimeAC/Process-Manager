@@ -54,9 +54,11 @@ int main(int argc, char* argv[]){
       }
 
       if(PID==0){
+        /* filho*/
         printf("%d\n",getpid());
-        printf("Filho com PID %d\n",PID);
-        if(execl(argVector[0],argVector[1], argVector[2], argVector[3], argVector[4], argVector[5], argVector[6], NULL)<0){
+        printf("Pai:%d\n",getppid());
+        printf("PID:%d\n",PID);
+        if(execv(argVector[0],argVector)<0){
         	printf("O exec falhou\n");
         	exit(1);
        
@@ -64,7 +66,8 @@ int main(int argc, char* argv[]){
       }
 
       else{
-        printf("Pai com PID %d\n",PID);
+        /* pai*/
+        printf("PID:%d\n",PID);
         printf("%d\n",getpid());
       }
       /*pathname routine fork exec*/

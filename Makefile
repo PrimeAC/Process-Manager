@@ -8,5 +8,6 @@ commandlinereader.o: commandlinereader.c commandlinereader.h
 
 par-shell.o: par-shell.c commandlinereader.h
 	gcc -Wall -g -c par-shell.c
+
 clear:
 	rm -f *.o par-shell
