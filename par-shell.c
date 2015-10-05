@@ -29,16 +29,16 @@ Main Program
 int main(int argc, char* argv[]){
   char **argVector;
   
-  int PID;
+  int PID, num_filhos=0,status;
 
   argVector = (char**) malloc(7*sizeof(char*));
   
   while(1){
     readLineArguments(argVector, 7);
-    printf("%s\n",argVector[0] );
+  
 
     if(strcmp(argVector[0], "exit")==0){
-      printf("exit\n");
+      exit(1);
 
       /*exit routine wait exit*/
       
@@ -46,30 +46,37 @@ int main(int argc, char* argv[]){
 
     else {
       
+      printf("num de abortos falhados:%d\n",num_filhos );
       PID=fork();
       
       if(PID<0){
-        printf("ERRO\n");
+        perror("ERRO\n");
         exit(1);
 
       }
 
       if(PID==0){
         /* filho*/
-        printf("%d\n",getpid());
-        printf("Pai:%d\n",getppid());
-        printf("PID:%d\n",PID);
+        printf("pid do aborto falhado:%d\n",getpid());
+        printf("pid do pai:%d\n",getppid());
+       
+        num_filhos++;
+        printf("num de filhotes:%d\n",num_filhos);
         if(execv(argVector[0],argVector)<0){
         	printf("O exec falhou\n");
         	exit(1);
        
         }
+        else{
+          exit(status);
+          num_filhos--;
+        }
       }
 
       else{
         /* pai*/
-        printf("PID:%d\n",PID);
-        printf("%d\n",getpid());
+        
+        printf("pid do papai:%d\n",getpid());
       }
       /*pathname routine fork exec*/
     }
