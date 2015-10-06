@@ -40,9 +40,11 @@ int main(int argc, char* argv[]){
 
     if(strcmp(argVector[0], "exit")==0){
       lst_print(list);
-      for(i=0; i<num_filhos; i++){
+      for(i=0; i<=num_filhos+1; i++){
         wait(&status); 
+        num_filhos--;
       }
+      printf("numero de filhos no fim:%d\n",num_filhos);
       exit(1);
 
       /*exit routine wait exit*/
@@ -51,17 +53,15 @@ int main(int argc, char* argv[]){
 
     else {
       
-      printf("num de abortos falhados:%d\n",num_filhos );
       PID=fork();
       
       if(PID<0){
-        perror("ERRO\n");
+        perror("Erro no fork()\n");
         exit(1);
 
       }
 
       if(PID==0){
-        printf("status:%d\n",status );
         /* filho*/
        // printf("pid do aborto falhado:%d\n",getpid());
         //printf("pid do pai:%d\n",getppid());
@@ -70,19 +70,18 @@ int main(int argc, char* argv[]){
         
        
         
-        printf("num de filhotes:%d\n",num_filhos);
+        printf("num de filhos:%d\n",num_filhos+1);
         
         if(execv(argVector[0],argVector)<0){
-        	printf("O exec falhou\n");
-        	exit(1);
+        	printf("Executavel nao encontrado!\n");
+        	exit(0);
        
         }
-        else{
-          printf("pid a terminar:%d\n", getpid());
-          exit(status);
-          num_filhos--;
-        }
       }
+      else if(wait(&status) != PID){ /*nao esta a chegar aqui*/
+        printf("um sinal interrompeu o wait\n");
+      }        
+      
 
       else{
         /* pai*/
@@ -90,9 +89,9 @@ int main(int argc, char* argv[]){
         //printf("pid do papai:%d\n",getpid());
       }
       /*pathname routine fork exec*/
-
-      insert_new_process(list,PID);
       num_filhos++;
+      insert_new_process(list,PID);
+      
     }
 
     
@@ -100,29 +99,6 @@ int main(int argc, char* argv[]){
   }
 }
 
-  /*PID=fork();
-
-  if (PID<0){
-    printf("ERRO\n");
-  }
-
-  if (PID==0){
-    printf("%d\n",getpid());
-    execl("/bin/SO/SO-ex1-enunciado-v2", "fibonacci.c", 0);
-    printf("Filho com PID %d\n",PID);
-    exit(0);
-  }
-  else{
-
-    printf("Pai com PID %d\n",PID);
-    PID=wait(&status);
-    printf("%d\n",getpid());
-  }
-
-printf("END OF PROGRAM\n");
-return 0;
-
-}*/
 
 
 
