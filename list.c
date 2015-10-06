@@ -5,7 +5,6 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <time.h>
 #include "list.h"
 
 
@@ -33,7 +32,7 @@ void lst_destroy(list_t *list)
 }
 
 
-void insert_new_process(list_t *list, int pid, time_t starttime)
+void insert_new_process(list_t *list, int pid)
 {
 	lst_iitem_t *item;
 
@@ -44,7 +43,7 @@ void insert_new_process(list_t *list, int pid, time_t starttime)
 }
 
 
-void update_terminated_process(list_t *list, int pid, time_t endtime)
+void update_terminated_process(list_t *list, int pid)
 {
    printf("teminated process with pid: %d\n", pid);
 }
@@ -54,11 +53,12 @@ void lst_print(list_t *list)
 {
 	lst_iitem_t *item;
 
-	printf("Process list by PID:\n");
+	printf("Process list:\n");
 	item = list->first;
+	/*while(1){  */
 	while (item != NULL){
 		printf("%d\n", item->pid);
 		item = item->next;
 	}
-	printf("-- END OF LIST --\n");
+	printf("-- end of list.\n");
 }

@@ -29,10 +29,10 @@ list_t* lst_new();
 void lst_destroy(list_t *);
 
 /* insert_new_process - insert a new item with process id and its start time in list 'list' */
-void insert_new_process(list_t *list, int pid, time_t starttime);
+void insert_new_process(list_t *list, int pid);
 
 /* lst_remove - remove first item of value 'value' from list 'list' */
-void update_terminated_process(list_t *list, int pid, time_t endtime);
+void update_terminated_process(list_t *list, int pid);
 
 /* lst_print - print the content of list 'list' to standard output */
 void lst_print(list_t *list);

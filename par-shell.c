@@ -20,7 +20,8 @@ Sistemas Operativos
 #include <unistd.h>
 #include <time.h>
 #include "commandlinereader.h"
-
+#include "list.h"
+#include <sys/wait.h>
 /*
 Main Program
 */
@@ -28,8 +29,8 @@ Main Program
 
 int main(int argc, char* argv[]){
   char **argVector;
-  
-  int PID, num_filhos=0,status;
+  int PID, num_filhos=0, status=0, i;
+  list_t* list = lst_new();
 
   argVector = (char**) malloc(7*sizeof(char*));
   
@@ -38,6 +39,10 @@ int main(int argc, char* argv[]){
   
 
     if(strcmp(argVector[0], "exit")==0){
+      lst_print(list);
+      for(i=0; i<num_filhos; i++){
+        wait(&status); 
+      }
       exit(1);
 
       /*exit routine wait exit*/
@@ -56,18 +61,24 @@ int main(int argc, char* argv[]){
       }
 
       if(PID==0){
+        printf("status:%d\n",status );
         /* filho*/
-        printf("pid do aborto falhado:%d\n",getpid());
-        printf("pid do pai:%d\n",getppid());
+       // printf("pid do aborto falhado:%d\n",getpid());
+        //printf("pid do pai:%d\n",getppid());
+        printf("Passei pelo insert new processes com o PID;%d\n",getpid());
+        printf("Pai:%d\n",getppid());
+        
        
-        num_filhos++;
+        
         printf("num de filhotes:%d\n",num_filhos);
+        
         if(execv(argVector[0],argVector)<0){
         	printf("O exec falhou\n");
         	exit(1);
        
         }
         else{
+          printf("pid a terminar:%d\n", getpid());
           exit(status);
           num_filhos--;
         }
@@ -75,10 +86,13 @@ int main(int argc, char* argv[]){
 
       else{
         /* pai*/
-        
-        printf("pid do papai:%d\n",getpid());
+        wait(&status);
+        //printf("pid do papai:%d\n",getpid());
       }
       /*pathname routine fork exec*/
+
+      insert_new_process(list,PID);
+      num_filhos++;
     }
 
     
