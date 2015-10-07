@@ -21,11 +21,10 @@ int main (int argc, char** argv) {
   unsigned long n, first = 0, second = 1, next, c, caux;
 
    n = atoi(argv[1]);
-   n++;
 
    printf("Process %d started to generate Fibonacci up to %lu.\n", (int) getpid(), n);
  
-   for ( c = 0 ; c < n ; c++ )
+   for ( c = 0 ; c <= n ; c++ )
    {
      for (caux = 0; caux < NUM_DUMMY_ITERATIONS; caux ++) ;
 
