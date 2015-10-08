@@ -78,7 +78,7 @@ int main(int argc, char* argv[]){
           if(execv(argVector[0],argVector)<0){
 
           	perror("");
-            free(argVector[0]);
+            /*free(argVector[0]);*/
             free(argVector);
 
           	exit(EXIT_FAILURE);
@@ -101,7 +101,7 @@ int main(int argc, char* argv[]){
           insert_new_process(list,PID,WEXITSTATUS(status));
           num_filhos++;
         }
-        free(argVector[0]);
+        /*free(argVector[0]);*/
       }  
     }
     else{

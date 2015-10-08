@@ -1,5 +1,4 @@
 fibonacci 100
 fibonacci 101
 fibonacci 102
-
 exit
