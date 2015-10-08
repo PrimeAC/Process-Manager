@@ -13,6 +13,9 @@ João Correia 81990
 
 Sistemas Operativos
 */
+#define FAILURE -1
+#define SUCCESS 0
+#define NARGUMENTOS 7
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,10 +37,10 @@ int main(int argc, char* argv[]){
 
   list_t* list = lst_new();
 
-  argVector = (char**) malloc(7*sizeof(char*));
+  argVector = (char**) malloc(NARGUMENTOS*sizeof(char*));
   
   while(1){
-    readLineArguments(argVector, 7);
+    readLineArguments(argVector, NARGUMENTOS);
   
 
     if(strcmp(argVector[0], "exit")==0){
@@ -48,9 +51,11 @@ int main(int argc, char* argv[]){
 
         wait(&status);
         num_filhos--;
-      }
 
-      printf("numero de filhos no fim:%d\n",num_filhos);
+      }
+      lst_destroy(list);
+      free(argVector[0]);
+      free(argVector);
       exit(0);
 
       /*exit routine wait exit*/
@@ -60,34 +65,29 @@ int main(int argc, char* argv[]){
     else {
       
       PID=fork();
-      
       if(PID<0){
 
-        perror("Erro no fork()\n");
+        perror("");
 
-        exit(-1);
+        exit(EXIT_SUCCESS);
 
       }
 
       if(PID==0){
-        /* filho*/
-        /*printf("Passei pelo insert new processes com o PID:%d\n",getpid());
-
-        printf("Pai:%d\n",getppid());*/
-         
-        printf("num de filhos:%d\n",num_filhos+1);
-        
+        /* filho*/        
         if(execv(argVector[0],argVector)<0){
 
-        	perror("Executavel nao encontrado!\t");
+        	perror("");
+          free(argVector[0]);
+          free(argVector);
 
-        	exit(-1);
+        	exit(EXIT_FAILURE);
        
         }
       }
       else if(wait(&status) != PID){ /*nao esta a chegar aqui*/
 
-        printf("um sinal interrompeu o wait\n");
+        perror("um sinal interrompeu o wait\t");
       }        
       
 
@@ -97,8 +97,11 @@ int main(int argc, char* argv[]){
         
       }
       /*pathname routine fork exec*/
-      insert_new_process(list,PID,WEXITSTATUS(status));
-      num_filhos++;
+      if(WIFEXITED(status)==1){ 
+        insert_new_process(list,PID,WEXITSTATUS(status));
+        num_filhos++;
+      }
+      free(argVector[0]);
     }  
   }
   
