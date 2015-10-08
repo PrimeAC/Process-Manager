@@ -30,7 +30,7 @@ Main Program
 int main(int argc, char* argv[]){
 
   char **argVector;
-  int PID, num_filhos=0, STATUS=0, i;
+  int PID, num_filhos=0, status=0, i;
 
   list_t* list = lst_new();
 
@@ -44,15 +44,13 @@ int main(int argc, char* argv[]){
 
       lst_print(list);
 
-      for(i=0; i<=num_filhos; i++){
+      for(i=0; i<=num_filhos+1; i++){
 
-        wait(&STATUS);
-        printf("%d\n",WEXITSTATUS(STATUS));
+        wait(&status);
         num_filhos--;
       }
 
       printf("numero de filhos no fim:%d\n",num_filhos);
-
       exit(0);
 
       /*exit routine wait exit*/
@@ -67,7 +65,7 @@ int main(int argc, char* argv[]){
 
         perror("Erro no fork()\n");
 
-        exit(1);
+        exit(-1);
 
       }
 
@@ -87,7 +85,7 @@ int main(int argc, char* argv[]){
        
         }
       }
-      else if(wait(&STATUS) != PID){ /*nao esta a chegar aqui*/
+      else if(wait(&status) != PID){ /*nao esta a chegar aqui*/
 
         printf("um sinal interrompeu o wait\n");
       }        
@@ -95,15 +93,16 @@ int main(int argc, char* argv[]){
 
       else{
         /* pai*/
-        wait(&STATUS);
+        wait(&status);
         
       }
       /*pathname routine fork exec*/
-      wait(&STATUS);
-      insert_new_process(list,PID,STATUS);
+      insert_new_process(list,PID,WEXITSTATUS(status));
       num_filhos++;
     }  
   }
+  
+
 }
 
 
