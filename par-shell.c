@@ -35,60 +35,52 @@ int main(int argc, char* argv[]){
   char **argVector;
   int PID, num_filhos=0, status=0, i;
 
-  list_t* list = lst_new();
+  list_t* list = lst_new(); /*cria uma lista onde é guardado o pid e o status dos processos*/
 
   argVector = (char**) malloc(NARGUMENTOS*sizeof(char*));
   
   while(1){
-    if(readLineArguments(argVector, NARGUMENTOS)>0){
-    
+    if(readLineArguments(argVector, NARGUMENTOS)>0){ /*verifica se o utilizador escreveu algo */
+      
       if(strcmp(argVector[0], "exit")==0){
         
         lst_print(list);
-        printf("numero de filhos no inicio: %d\n",num_filhos );
+       
         for(i=0; i<num_filhos; i++){
-          
-          printf("valor do i: %d\n",i );
-          wait(&status);
-
-          
+         
+          wait(&status);/*aguarda que os processos filhos terminem*/ 
 
         }
-        printf("numero de filhos no fim: %d\n",num_filhos );
-        lst_destroy(list);
+        
+        lst_destroy(list);/*apaga todos os eelementos da lista*/
         free(argVector[0]);
         free(argVector);
-        exit(0);
+        exit(EXIT_SUCCESS);/*termina o processo pai*/
 
-        /*exit routine wait exit*/
-        
       }
 
       else {
         
-        PID=fork();
-        if(PID<0){
-
+        PID=fork();/*guarda na variavel pid o resultado da funçao fork*/
+        
+        if(PID<0){  /*caso ocorra erro na criacao do processo filho*/
           perror("");
-
           exit(EXIT_SUCCESS);
 
         }
 
-        else if(PID==0){
-          /* filho*/
+        else if(PID==0){/*processo filho*/
           
-          if(execv(argVector[0],argVector)<0){
+          if(execv(argVector[0],argVector)<0){ /*verifica se ocorreu um erro a correr o executavel*/
 
           	perror("");
             free(argVector[0]);
-            //free(argVector);
-
-          	exit(EXIT_FAILURE);
+            free(argVector);
+            exit(EXIT_FAILURE);
          
           }
         }
-        else if(wait(&status) != PID){ /*nao esta a chegar aqui*/
+        else if(wait(&status) != PID){ 
 
           perror("um sinal interrompeu o wait\t");
         }        
@@ -104,7 +96,7 @@ int main(int argc, char* argv[]){
           insert_new_process(list,PID,WEXITSTATUS(status));
           num_filhos++;
         }
-        /*free(argVector[0]);*/
+        free(argVector[0]);
       }  
     }
     else{
