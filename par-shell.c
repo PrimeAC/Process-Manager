@@ -43,15 +43,18 @@ int main(int argc, char* argv[]){
     if(readLineArguments(argVector, NARGUMENTOS)>0){
     
       if(strcmp(argVector[0], "exit")==0){
-
+        
         lst_print(list);
-
-        for(i=0; i<=num_filhos+1; i++){
-
+        printf("numero de filhos no inicio: %d\n",num_filhos );
+        for(i=0; i<num_filhos; i++){
+          
+          printf("valor do i: %d\n",i );
           wait(&status);
-          num_filhos--;
+
+          
 
         }
+        printf("numero de filhos no fim: %d\n",num_filhos );
         lst_destroy(list);
         free(argVector[0]);
         free(argVector);
@@ -72,14 +75,14 @@ int main(int argc, char* argv[]){
 
         }
 
-        if(PID==0){
+        else if(PID==0){
           /* filho*/
           
           if(execv(argVector[0],argVector)<0){
 
           	perror("");
-            /*free(argVector[0]);*/
-            free(argVector);
+            free(argVector[0]);
+            //free(argVector);
 
           	exit(EXIT_FAILURE);
          
