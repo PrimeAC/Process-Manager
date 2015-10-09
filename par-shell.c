@@ -44,15 +44,24 @@ int main(int argc, char* argv[]){
       
       if(strcmp(argVector[0], "exit")==0){
         
-        lst_print(list);
+        
        
         for(i=0; i<num_filhos; i++){
          
-          wait(&status);/*aguarda que os processos filhos terminem*/ 
+          PID=wait(&status);/*aguarda que os processos filhos terminem*/ 
 
+          if(PID<0){/*verifica se houve erro no processo*/
+            continue;
+          }
+
+          if(WIFEXITED(status)){ /*verifica se o processo terminou corretamente*/
+            insert_new_process(list,PID,WEXITSTATUS(status)); /*guarda o PID do processo e o status correspondente*/
+          
+          }
         }
-        
-        lst_destroy(list);/*apaga todos os eelementos da lista*/
+
+        lst_print(list);/*imprime a lista dos processos filho*/
+        lst_destroy(list);/*apaga todos os elementos da lista*/
         free(argVector[0]);
         free(argVector);
         exit(EXIT_SUCCESS);/*termina o processo pai*/
@@ -61,12 +70,11 @@ int main(int argc, char* argv[]){
 
       else {
         
-        PID=fork();/*guarda na variavel pid o resultado da funçao fork*/
+        PID=fork();/*guarda na variavel PID o resultado da funçao fork*/
         
         if(PID<0){  /*caso ocorra erro na criacao do processo filho*/
           perror("");
-          exit(EXIT_SUCCESS);
-
+          
         }
 
         else if(PID==0){/*processo filho*/
@@ -76,26 +84,13 @@ int main(int argc, char* argv[]){
           	perror("");
             free(argVector[0]);
             free(argVector);
-            exit(EXIT_FAILURE);
+            exit(EXIT_FAILURE);/*termina o processo filho*/
          
           }
         }
-        else if(wait(&status) != PID){ 
 
-          perror("um sinal interrompeu o wait\t");
-        }        
+        num_filhos++;
         
-
-        else{
-          /* pai*/
-          wait(&status);
-          
-        }
-        /*pathname routine fork exec*/
-        if(WIFEXITED(status)==1){ 
-          insert_new_process(list,PID,WEXITSTATUS(status));
-          num_filhos++;
-        }
         free(argVector[0]);
       }  
     }

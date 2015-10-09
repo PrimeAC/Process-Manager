@@ -1,8 +1,6 @@
 fibonacci 100
-asa 7
 fibonacci 101
-fibonacci 102
-AFFR 8
+ fibonacci 20
+fibonacci 1
 fibonacci 2
-sdef 9
 exit
