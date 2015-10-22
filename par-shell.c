@@ -25,45 +25,30 @@ Sistemas Operativos
 #include "commandlinereader.h"
 #include "list.h"
 #include <sys/wait.h>
+#include <pthread.h>
 
-void tarefaMonitora(){  
+char **argVector;
+int PID, TID, num_filhos=0, status=0, i, flag=0;
+pthread_t tid[1];
+time_t starttime, endtime;
+list_t* list;
+
+
+void *tarefaMonitora(){  
+
 
   while (1){
-    if (num_filhos==0) 
-
-      sleep(1);
-    else
-      wait();
-      update_terminated_process(list, PID, endtime)
-
-}
-
-/*
-Main Program
-*/
-int main(int argc, char* argv[]){
-
-  char **argVector;
-  int PID, num_filhos=0, status=0, i, 
-  pthread_t = tid[1]
-  time_t 
-  list_t* list = lst_new(); /*cria uma lista onde é guardado o PID e o status dos processos*/
-  int 
-
-  argVector = (char**) malloc(NARGUMENTOS*sizeof(char*));
-
-
-  while(1){
-
-    err = pthread_create(tid,0,tarefaMonitora,0)
-
-    if(readLineArguments(argVector, NARGUMENTOS)>0){ /*verifica se o utilizador escreveu algo */
+    if (num_filhos==0 && flag==0) {/*nao tem filhos e nao quer sair*/
       
-      if(strcmp(argVector[0], "exit")==0){
-        
-        pthread_join(tid[1],NULL)
-       
-        for(;num_filhos>0;num_filhos--){
+      sleep(1);
+    }
+    if (num_filhos==0 && flag==1){/*nao tem filhos mas foi acionado o exit*/
+      pthread_exit(0);
+    }
+
+
+    else{
+      for(;num_filhos>0;num_filhos--){/*nenhum dos casos acima mencionados*/
          
           PID=wait(&status);/*aguarda que os processos filhos terminem*/ 
 
@@ -71,12 +56,42 @@ int main(int argc, char* argv[]){
             continue;
           }
 
-          if(WIFEXITED(status)){ /*verifica se o processo terminou corretamente*/
-            insert_new_process(list,PID,WEXITSTATUS(status)); /*guarda o PID do processo e o status correspondente*/
+          else if(WIFEXITED(status)){ /*verifica se o processo terminou corretamente*/
+            update_terminated_process(list,PID,WEXITSTATUS(status),time(NULL)); /* UPDATE DO STATUS E DO ENDTIME*/
           
           }
-        }
+      }
+    }
+  }
+}
 
+/*
+Main Program
+*/
+int main(int argc, char* argv[]){
+
+  list = lst_new(); /*cria uma lista onde é guardado o PID e o status dos processos*/
+
+  argVector = (char**) malloc(NARGUMENTOS*sizeof(char*));
+
+
+  while(1){
+
+    TID = pthread_create(&tid[1] ,0,tarefaMonitora,0);
+
+    if (TID!=0){
+      perror("");
+    }
+
+    if(readLineArguments(argVector, NARGUMENTOS)>0){ /*verifica se o utilizador escreveu algo */
+      
+      if(strcmp(argVector[0], "exit")==0){
+
+        flag=1;
+        
+        pthread_join(tid[1],NULL);
+        printf("num_filhos:%d\n",num_filhos );
+       
         lst_print(list);/*imprime a lista dos processos filho*/
         lst_destroy(list);/*apaga todos os elementos da lista*/
         free(argVector[0]);
@@ -88,8 +103,6 @@ int main(int argc, char* argv[]){
       else {
         
         PID=fork();/*guarda na variavel PID o resultado da funçao fork*/
-
-        insert_new_process(list_t *list, int PID, time_t starttime)
         
         if(PID<0){  /*caso ocorra erro na criacao do processo filho*/
           perror("");
@@ -97,7 +110,7 @@ int main(int argc, char* argv[]){
         }
 
         else if(PID==0){/*processo filho*/
-          
+          insert_new_process(list, getpid(),0, time(NULL));
           if(execv(argVector[0],argVector)<0){ /*verifica se ocorreu um erro a correr o executavel*/
 
           	perror("");
@@ -107,11 +120,13 @@ int main(int argc, char* argv[]){
          
           }
         }
-        insert_new_process(list, PID, tstarttime)/*lista do lab 1 - mudar o nome*/
+      }
+        /*lista do lab 1 - mudar o nome*/
         num_filhos++;
+        printf("num_filhos:%d\n",num_filhos );
         
-        free(argVector[0]);
-      }  
+        //free(argVector[0]);
+        
     }
     else{
       printf("Por favor insira um argumento válido!\n");
