@@ -1,6 +1,4 @@
+fibonacci 100000
 fibonacci 100
-fibonacci 101
- fibonacci 20
-fibonacci 1
-fibonacci 2
+a
 exit
