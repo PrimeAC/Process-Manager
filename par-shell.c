@@ -39,6 +39,7 @@ void *tarefaMonitora(){
 
 
   while (1){
+
     if (num_filhos==0 && flag==0) {/*nao tem filhos e nao quer sair*/
       
       sleep(1);
@@ -49,7 +50,7 @@ void *tarefaMonitora(){
 
 
     else{
-      for(;num_filhos>0;num_filhos--){/*nenhum dos casos acima mencionados*/
+      while(num_filhos>0){/*nenhum dos casos acima mencionados*/
          
           PID=wait(&status);/*aguarda que os processos filhos terminem*/ 
 
@@ -58,10 +59,13 @@ void *tarefaMonitora(){
           }
 
           else if(WIFEXITED(status)){ /*verifica se o processo terminou corretamente*/
-            printf("PID a terminar:%d\n",PID );
+
             update_terminated_process(list,PID,WEXITSTATUS(status),time(NULL)); /* UPDATE DO STATUS E DO ENDTIME*/
           
           }
+          pthread_mutex_lock(&mutex);
+          num_filhos--;
+          pthread_mutex_unlock(&mutex);
       }
     }
   }
@@ -93,7 +97,7 @@ int main(int argc, char* argv[]){
         flag=1;
         
         pthread_join(tid[1],NULL);
-        printf("num_filhos:%d\n",num_filhos );
+        //printf("num_filhos:%d\n",num_filhos );
        
         lst_print(list);/*imprime a lista dos processos filho*/
         lst_destroy(list);/*apaga todos os elementos da lista*/
@@ -125,14 +129,16 @@ int main(int argc, char* argv[]){
           }
         }
       }
-        /*lista do lab 1 - mudar o nome*/
-        printf("num_filhos:%d\n",num_filhos );
-        num_filhos++;
-        printf("PID a inserir:%d\n",PID );
-        insert_new_process(list, PID,0, time(NULL));
-        printf("num_filhos:%d\n",num_filhos );
-        
-        //free(argVector[0]);
+      /*lista do lab 1 - mudar o nome*/
+      //printf("num_filhos:%d\n",num_filhos );
+      pthread_mutex_lock(&mutex);
+      num_filhos++;
+      //printf("PID a inserir:%d\n",PID );
+      insert_new_process(list, PID, time(NULL));
+      pthread_mutex_unlock(&mutex);
+      //printf("num_filhos:%d\n",num_filhos );
+      
+      //free(argVector[0]);
         
     }
     else{

@@ -33,13 +33,13 @@ void lst_destroy(list_t *list)
 }
 
 
-void insert_new_process(list_t *list, int pid, int status, time_t starttime)
+void insert_new_process(list_t *list, int pid, time_t starttime)
 {
 	lst_iitem_t *item;
 
 	item = (lst_iitem_t *) malloc (sizeof(lst_iitem_t));
 	item->pid = pid;
-	item->status = status;
+	//item->status = status;
 	item->starttime = starttime;
 	item->endtime = 0;
 	item->next = list->first;
@@ -54,12 +54,13 @@ void update_terminated_process(list_t *list, int pid, int status, time_t endtime
 	while(item != NULL){
 		if((item->pid)==pid){
 			item->endtime=endtime;
+			item->status=status;
 			item = item->next;
 			break;
 		}
 		item = item->next;
 	}
-   printf("teminated process with pid and status: %d and %d\n", pid, status);
+   printf("Teminated process with pid and status: %d and %d\n", pid, status);
 }
 
 
