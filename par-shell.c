@@ -57,6 +57,7 @@ void *tarefaMonitora(){
           }
 
           else if(WIFEXITED(status)){ /*verifica se o processo terminou corretamente*/
+            printf("PID a inserir:%d\n",PID );
             update_terminated_process(list,PID,WEXITSTATUS(status),time(NULL)); /* UPDATE DO STATUS E DO ENDTIME*/
           
           }
@@ -123,6 +124,7 @@ int main(int argc, char* argv[]){
       }
         /*lista do lab 1 - mudar o nome*/
         num_filhos++;
+
         printf("num_filhos:%d\n",num_filhos );
         
         //free(argVector[0]);
