@@ -29,38 +29,46 @@ Sistemas Operativos
 
 char **argVector;
 int PID, TID, num_filhos=0, status=0, i, flag=0;
-pthread_t tid[1];
-pthread_mutex_t mutex;
+pthread_t tid[1];/*cria um vetor com as tarefas a criar*/
+pthread_mutex_t mutex;/*trinco*/
 time_t starttime, endtime;
-list_t* list;
+list_t* list;/*lista que guarda os processos filho*/
 
 
-void *tarefaMonitora(){  
+void *tarefaMonitora(){ /*Tarefa responsável por monitorizar os tempos de execução de cada processo filho */
 
 
   while (1){
-
-    if (num_filhos==0 && flag==0) {/*nao tem filhos e nao quer sair*/
+    
+    pthread_mutex_lock(&mutex);
+    if (num_filhos==0) {/*nao existem processos filhos*/
       
-      sleep(1);
-    }
-    if (num_filhos==0 && flag==1){/*nao tem filhos mas foi acionado o exit*/
-      pthread_exit(0);
-    }
 
-
-    else{
-      while(num_filhos>0){/*nenhum dos casos acima mencionados*/
+      if(flag==0){/*verifica se foi acionado o comando exit*/
+        pthread_mutex_unlock(&mutex); 
+        sleep(1);/*suspende o processo durante 1 segundo*/
+      }
+      
+      else {/*foi acionado o comando exit*/
+        pthread_mutex_unlock(&mutex);
+        pthread_exit(SUCCESS);/*termina a tarefe monitora*/
+      }
+    }
+    
+    else{/*Existem processos filhos*/
+      pthread_mutex_unlock(&mutex);
+      while(num_filhos>0){
          
           PID=wait(&status);/*aguarda que os processos filhos terminem*/ 
 
-          if(PID<0){/*verifica se houve erro no processo*/
+          if(PID<0){/*verifica se houve erro fatal no processo*/
             continue;
           }
 
           else if(WIFEXITED(status)){ /*verifica se o processo terminou corretamente*/
-
-            update_terminated_process(list,PID,WEXITSTATUS(status),time(NULL)); /* UPDATE DO STATUS E DO ENDTIME*/
+            pthread_mutex_lock(&mutex);
+            update_terminated_process(list,PID,WEXITSTATUS(status),time(NULL)); /* guarda o status e o tempo final do processo*/
+            pthread_mutex_unlock(&mutex);
           
           }
           pthread_mutex_lock(&mutex);
@@ -79,11 +87,12 @@ int main(int argc, char* argv[]){
   list = lst_new(); /*cria uma lista onde é guardado o PID e o status dos processos*/
 
   argVector = (char**) malloc(NARGUMENTOS*sizeof(char*));
-  pthread_mutex_init(&mutex,NULL);
 
-  TID = pthread_create(&tid[1] ,0,tarefaMonitora,0);
+  pthread_mutex_init(&mutex,NULL);/*inicializa o trinco*/
 
-  if (TID!=0){
+  TID = pthread_create(&tid[1] ,NULL,tarefaMonitora,NULL);/*cria a tarefa monitora*/
+
+  if (TID!=0){/*verifica se houve um erro a criar a tarefa*/
     perror("");
   }
 
@@ -93,17 +102,18 @@ int main(int argc, char* argv[]){
     if(readLineArguments(argVector, NARGUMENTOS)>0){ /*verifica se o utilizador escreveu algo */
       
       if(strcmp(argVector[0], "exit")==0){
-
-        flag=1;
         
-        pthread_join(tid[1],NULL);
-        //printf("num_filhos:%d\n",num_filhos );
-       
+        pthread_mutex_lock(&mutex);
+        flag=1;/*memoriza o acionamento do comando exit*/
+        pthread_mutex_unlock(&mutex);
+
+        pthread_join(tid[1],NULL);/*aguarda que a tarefa monitora termine*/
+        
         lst_print(list);/*imprime a lista dos processos filho*/
         lst_destroy(list);/*apaga todos os elementos da lista*/
         free(argVector[0]);
         free(argVector);
-        pthread_mutex_destroy(&mutex);
+        pthread_mutex_destroy(&mutex);/*elimina o mutex e liberta os recursos a ele associados*/
         exit(EXIT_SUCCESS);/*termina o processo pai*/
 
       }
@@ -129,24 +139,20 @@ int main(int argc, char* argv[]){
           }
         }
       }
-      /*lista do lab 1 - mudar o nome*/
-      //printf("num_filhos:%d\n",num_filhos );
+      
       pthread_mutex_lock(&mutex);
       num_filhos++;
-      //printf("PID a inserir:%d\n",PID );
-      insert_new_process(list, PID, time(NULL));
+
+      insert_new_process(list, PID, time(NULL));/*insere na lista o PID  e o tempo inicial do processo filho*/
       pthread_mutex_unlock(&mutex);
-      //printf("num_filhos:%d\n",num_filhos );
       
-      //free(argVector[0]);
+      free(argVector[0]);
         
     }
     else{
       printf("Por favor insira um argumento válido!\n");
     }
   }
-  
-
 }
 
 
