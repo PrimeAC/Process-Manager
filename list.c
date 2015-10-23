@@ -55,6 +55,7 @@ void update_terminated_process(list_t *list, int pid, int status, time_t endtime
 		if((item->pid)==pid){
 			item->endtime=endtime;
 			item = item->next;
+			break;
 		}
 		item = item->next;
 	}

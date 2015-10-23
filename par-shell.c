@@ -30,6 +30,7 @@ Sistemas Operativos
 char **argVector;
 int PID, TID, num_filhos=0, status=0, i, flag=0;
 pthread_t tid[1];
+pthread_mutex_t mutex;
 time_t starttime, endtime;
 list_t* list;
 
@@ -57,7 +58,7 @@ void *tarefaMonitora(){
           }
 
           else if(WIFEXITED(status)){ /*verifica se o processo terminou corretamente*/
-            printf("PID a inserir:%d\n",PID );
+            printf("PID a terminar:%d\n",PID );
             update_terminated_process(list,PID,WEXITSTATUS(status),time(NULL)); /* UPDATE DO STATUS E DO ENDTIME*/
           
           }
@@ -74,15 +75,16 @@ int main(int argc, char* argv[]){
   list = lst_new(); /*cria uma lista onde é guardado o PID e o status dos processos*/
 
   argVector = (char**) malloc(NARGUMENTOS*sizeof(char*));
+  pthread_mutex_init(&mutex,NULL);
 
+  TID = pthread_create(&tid[1] ,0,tarefaMonitora,0);
+
+  if (TID!=0){
+    perror("");
+  }
 
   while(1){
 
-    TID = pthread_create(&tid[1] ,0,tarefaMonitora,0);
-
-    if (TID!=0){
-      perror("");
-    }
 
     if(readLineArguments(argVector, NARGUMENTOS)>0){ /*verifica se o utilizador escreveu algo */
       
@@ -97,6 +99,7 @@ int main(int argc, char* argv[]){
         lst_destroy(list);/*apaga todos os elementos da lista*/
         free(argVector[0]);
         free(argVector);
+        pthread_mutex_destroy(&mutex);
         exit(EXIT_SUCCESS);/*termina o processo pai*/
 
       }
@@ -111,7 +114,7 @@ int main(int argc, char* argv[]){
         }
 
         else if(PID==0){/*processo filho*/
-          insert_new_process(list, getpid(),0, time(NULL));
+          
           if(execv(argVector[0],argVector)<0){ /*verifica se ocorreu um erro a correr o executavel*/
 
           	perror("");
@@ -123,8 +126,10 @@ int main(int argc, char* argv[]){
         }
       }
         /*lista do lab 1 - mudar o nome*/
+        printf("num_filhos:%d\n",num_filhos );
         num_filhos++;
-
+        printf("PID a inserir:%d\n",PID );
+        insert_new_process(list, PID,0, time(NULL));
         printf("num_filhos:%d\n",num_filhos );
         
         //free(argVector[0]);
