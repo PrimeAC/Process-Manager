@@ -1,7 +1,7 @@
 # Makefile 
 
 par-shell: commandlinereader.o par-shell.o list.o 
-	gcc -o par-shell commandlinereader.o par-shell.o list.o -lpthread
+	gcc -o par-shell commandlinereader.o par-shell.o list.o -lpthread -lrt
 
 commandlinereader.o: commandlinereader.c commandlinereader.h
 	gcc -Wall -g -c commandlinereader.c

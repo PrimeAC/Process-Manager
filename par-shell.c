@@ -16,6 +16,8 @@ Sistemas Operativos
 #define FAILURE -1
 #define SUCCESS 0
 #define NARGUMENTOS 7
+#define MAXPAR 2
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,11 +28,13 @@ Sistemas Operativos
 #include "list.h"
 #include <sys/wait.h>
 #include <pthread.h>
+#include <semaphore.h>
 
 char **argVector;
 int PID, TID, num_filhos=0, status=0, i, flag=0;
 pthread_t tid[1];/*cria um vetor com as tarefas a criar*/
 pthread_mutex_t mutex;/*trinco*/
+sem_t numProcessos, semFilhos;
 time_t starttime, endtime;
 list_t* list;/*lista que guarda os processos filho*/
 
@@ -46,7 +50,7 @@ void *tarefaMonitora(){ /*Tarefa responsável por monitorizar os tempos de execu
 
       if(flag==0){/*verifica se foi acionado o comando exit*/
         pthread_mutex_unlock(&mutex); 
-        sleep(1);/*suspende o processo durante 1 segundo*/
+        sem_wait(&semFilhos);
       }
       
       else {/*foi acionado o comando exit*/
@@ -60,6 +64,8 @@ void *tarefaMonitora(){ /*Tarefa responsável por monitorizar os tempos de execu
       while(num_filhos>0){
          
           PID=wait(&status);/*aguarda que os processos filhos terminem*/ 
+
+          sem_post(&numProcessos);/*Assinala que acabou um processo*/
 
           if(PID<0){/*verifica se houve erro fatal no processo*/
             continue;
@@ -90,6 +96,9 @@ int main(int argc, char* argv[]){
 
   pthread_mutex_init(&mutex,NULL);/*inicializa o trinco*/
 
+  sem_init(&numProcessos,0,MAXPAR);
+  sem_init(&semFilhos,0,0);
+
   TID = pthread_create(&tid[1] ,NULL,tarefaMonitora,NULL);/*cria a tarefa monitora*/
 
   if (TID!=0){/*verifica se houve um erro a criar a tarefa*/
@@ -103,9 +112,12 @@ int main(int argc, char* argv[]){
       
       if(strcmp(argVector[0], "exit")==0){
         
+
         pthread_mutex_lock(&mutex);
         flag=1;/*memoriza o acionamento do comando exit*/
         pthread_mutex_unlock(&mutex);
+
+        sem_post(&semFilhos);
 
         pthread_join(tid[1],NULL);/*aguarda que a tarefa monitora termine*/
         
@@ -114,12 +126,16 @@ int main(int argc, char* argv[]){
         free(argVector[0]);
         free(argVector);
         pthread_mutex_destroy(&mutex);/*elimina o mutex e liberta os recursos a ele associados*/
+        sem_destroy(&numProcessos);
+        sem_destroy(&semFilhos);
         exit(EXIT_SUCCESS);/*termina o processo pai*/
 
       }
 
       else {
         
+        sem_wait(&numProcessos);/*bloqueia o processo caso hajam MAXPAR processos a correr em simultaneo*/
+
         PID=fork();/*guarda na variavel PID o resultado da funçao fork*/
         
         if(PID<0){  /*caso ocorra erro na criacao do processo filho*/
@@ -128,6 +144,7 @@ int main(int argc, char* argv[]){
         }
 
         else if(PID==0){/*processo filho*/
+          
           
           if(execv(argVector[0],argVector)<0){ /*verifica se ocorreu um erro a correr o executavel*/
 
@@ -145,6 +162,8 @@ int main(int argc, char* argv[]){
 
       insert_new_process(list, PID, time(NULL));/*insere na lista o PID  e o tempo inicial do processo filho*/
       pthread_mutex_unlock(&mutex);
+
+      sem_post(&semFilhos);
       
       free(argVector[0]);
         
