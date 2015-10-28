@@ -13,10 +13,8 @@ João Correia 81990
 
 Sistemas Operativos
 */
-#define FAILURE -1
-#define SUCCESS 0
 #define NARGUMENTOS 7
-#define MAXPAR 2
+#define MAXPAR 4
 
 
 #include <stdio.h>
@@ -41,6 +39,7 @@ list_t* list;/*lista que guarda os processos filho*/
 
 void *tarefaMonitora(){ /*Tarefa responsável por monitorizar os tempos de execução de cada processo filho */
 
+  printf("Tarefa monitora inicializada!\n");
 
   while (1){
     
@@ -55,7 +54,8 @@ void *tarefaMonitora(){ /*Tarefa responsável por monitorizar os tempos de execu
       
       else {/*foi acionado o comando exit*/
         pthread_mutex_unlock(&mutex);
-        pthread_exit(SUCCESS);/*termina a tarefe monitora*/
+        printf("Tarefa monitora finalizada!\n");
+        pthread_exit(EXIT_SUCCESS);/*termina a tarefe monitora*/
       }
     }
     
@@ -99,7 +99,7 @@ int main(int argc, char* argv[]){
   sem_init(&numProcessos,0,MAXPAR);
   sem_init(&semFilhos,0,0);
 
-  TID = pthread_create(&tid[1] ,NULL,tarefaMonitora,NULL);/*cria a tarefa monitora*/
+  TID = pthread_create(&tid[0] ,NULL,tarefaMonitora,NULL);/*cria a tarefa monitora*/
 
   if (TID!=0){/*verifica se houve um erro a criar a tarefa*/
     perror("");
@@ -118,8 +118,8 @@ int main(int argc, char* argv[]){
         pthread_mutex_unlock(&mutex);
 
         sem_post(&semFilhos);
-
-        pthread_join(tid[1],NULL);/*aguarda que a tarefa monitora termine*/
+       
+        pthread_join(tid[0],NULL);/*aguarda que a tarefa monitora termine*/
         
         lst_print(list);/*imprime a lista dos processos filho*/
         lst_destroy(list);/*apaga todos os elementos da lista*/
@@ -165,7 +165,9 @@ int main(int argc, char* argv[]){
 
       sem_post(&semFilhos);
       
+      
       free(argVector[0]);
+      
         
     }
     else{

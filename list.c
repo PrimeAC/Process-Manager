@@ -60,7 +60,6 @@ void update_terminated_process(list_t *list, int pid, int status, time_t endtime
 		}
 		item = item->next;
 	}
-   printf("Teminated process with pid and status: %d and %d\n", pid, status);
 }
 
 
