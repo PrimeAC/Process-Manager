@@ -163,7 +163,7 @@ int main(int argc, char* argv[]){
       insert_new_process(list, PID, time(NULL));/*insere na lista o PID  e o tempo inicial do processo filho*/
       pthread_mutex_unlock(&mutex);
 
-      sem_post(&semFilhos);
+      sem_post(&semFilhos);/*indica que um filho foi criado*/
       
       
       free(argVector[0]);
