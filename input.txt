@@ -1,7 +1,7 @@
-fibonacci 200
+fibonacci 2000
 fibonacci 4500
 fibonacci 34005
-fibonacci 350
+fibonacci 3500
 fibonacci 600
 fibonacci 1000
 exit
