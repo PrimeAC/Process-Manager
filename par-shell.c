@@ -50,6 +50,7 @@ void *tarefaMonitora(){ /*Tarefa responsável por monitorizar os tempos de execu
 	        	pthread_mutex_unlock(&mutex); 
 	        	pthread_mutex_lock(&cond_mutex);
 	        	while (num_filhos==0 && flag==0) pthread_cond_wait(&semFilhos, &cond_mutex);
+	        	pthread_mutex_unlock(&cond_mutex);
 	      	}
 	      
 	      	else {/*foi acionado o comando exit*/
@@ -66,7 +67,7 @@ void *tarefaMonitora(){ /*Tarefa responsável por monitorizar os tempos de execu
 	          	PID=wait(&status);/*aguarda que os processos filhos terminem*/ 
 
 	      		pthread_cond_signal(&numProcessos);
-	      		pthread_mutex_unlock(&cond_mutex);
+	      		
 
 	         	if(PID<0){/*verifica se houve erro fatal no processo*/
 	            	continue;
@@ -118,8 +119,8 @@ int main(int argc, char* argv[]){
 			    flag=1;/*memoriza o acionamento do comando exit*/
 			    pthread_mutex_unlock(&mutex);
 
-			    pthread_mutex_unlock(&cond_mutex);
 			    pthread_cond_signal(&semFilhos);
+			    pthread_mutex_unlock(&cond_mutex);
 			   
 			    pthread_join(tid[0],NULL);/*aguarda que a tarefa monitora termine*/
 			    
@@ -142,7 +143,7 @@ int main(int argc, char* argv[]){
 		    	 
 		    	pthread_mutex_lock(&cond_mutex);
 		    	while(num_filhos>=MAXPAR) pthread_cond_wait(&numProcessos,&cond_mutex);
-
+		    	pthread_mutex_unlock(&cond_mutex);
 			    PID=fork();/*guarda na variavel PID o resultado da funçao fork*/
 			    
 			    if(PID<0){  /*caso ocorra erro na criacao do processo filho*/
@@ -166,12 +167,9 @@ int main(int argc, char* argv[]){
 
 		  	insert_new_process(list, PID, time(NULL));/*insere na lista o PID  e o tempo inicial do processo filho*/
 		  	pthread_mutex_unlock(&mutex);
-
 		  	
 		  	pthread_cond_signal(&semFilhos);
-		  	pthread_mutex_unlock(&cond_mutex);
-		  
-		  
+		  	
 		  	free(argVector[0]);
 	    } 
 
