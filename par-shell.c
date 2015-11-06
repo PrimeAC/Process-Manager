@@ -28,13 +28,35 @@ Sistemas Operativos
 #include <pthread.h>
 #include <semaphore.h>
 
-char **argVector;
-int PID, TID, num_filhos=0, status=0, i, flag=0;
+FILE *fp;
+char **argVector, line[60];
+int PID, TID, num_filhos=0, status=0, i, flag=0, tempo;
 pthread_t tid[1];/*cria um vetor com as tarefas a criar*/
 pthread_mutex_t mutex, cond_mutex;/*trinco*/
 pthread_cond_t semFilhos, numProcessos;
 time_t starttime, endtime;
 list_t* list;/*lista que guarda os processos filho*/
+
+void fileUpdate(int pid,int exec_time){
+
+	fprintf(fp,"iteracao \npid: %d execution time: %d s\ntotal execution time: 6 s", pid, exec_time);
+
+	
+}
+
+int getTime(){
+	
+	
+	while(fgets(line,60, fp)!=NULL){
+		puts(line);
+	}
+	
+	printf("%s\n",line );
+	sscanf(line, "%d", &tempo);
+	printf("%d\n",tempo );
+	return tempo;
+
+}
 
 
 void *tarefaMonitora(){ /*Tarefa responsável por monitorizar os tempos de execução de cada processo filho */
@@ -100,6 +122,15 @@ int main(int argc, char* argv[]){
 
 	pthread_cond_init(&semFilhos,NULL);
 	pthread_cond_init(&numProcessos, NULL);
+	
+	fp=fopen("log.txt", "a+");
+	if (fp==NULL){
+		perror("log.txt");
+		exit(EXIT_FAILURE);
+	}
+	fileUpdate(3630,6);
+	getTime();
+	fclose(fp);
 
 	TID = pthread_create(&tid[0] ,NULL,tarefaMonitora,NULL);/*cria a tarefa monitora*/
 
