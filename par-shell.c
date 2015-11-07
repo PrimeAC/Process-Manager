@@ -29,8 +29,8 @@ Sistemas Operativos
 #include <semaphore.h>
 
 FILE *fp;
-char **argVector, line[60],vetor[15];
-int PID, TID, num_filhos=0, status=0, i, flag=0, tempo,iteracao;
+char **argVector, line[60];
+int PID, TID, num_filhos=0, status=0, i, flag=0;
 pthread_t tid[1];/*cria um vetor com as tarefas a criar*/
 pthread_mutex_t mutex, cond_mutex;/*trinco*/
 pthread_cond_t semFilhos, numProcessos;
@@ -38,19 +38,18 @@ time_t starttime, endtime;
 list_t* list;/*lista que guarda os processos filho*/
 
 int obtemTempo(){
-	char line[60];
-	int iteration;
+	int total_time;
 	rewind(fp);
 	while( fgets (line, 60, fp)!=NULL ) {
 		continue;	
    	}
-   	sscanf(line, "total execution time: %d s", &iteration);
-   	return iteration;
+   	sscanf(line, "total execution time: %d s", &total_time);
+   	return total_time;
 }
 
-int obtemIteracao(){
+/*int obtemIteracao(){
 
-}
+}*/
 void Atualiza(int pid,int exec_time){
 	int total_time;
 	rewind(fp);
@@ -58,7 +57,7 @@ void Atualiza(int pid,int exec_time){
 		printf("Nothing to update!\n");
 		return;
 	}
-	total_time=getTime()+exec_time;
+	total_time=obtemTempo()+exec_time;
 	fprintf(fp,"iteracao 0\npid: %d execution time: %d s\ntotal execution time: %d s\n", pid, exec_time,total_time );
 
 	
