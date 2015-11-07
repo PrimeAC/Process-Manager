@@ -37,72 +37,33 @@ pthread_cond_t semFilhos, numProcessos;
 time_t starttime, endtime;
 list_t* list;/*lista que guarda os processos filho*/
 
-void fileUpdate(int pid,int exec_time){
+int obtemTempo(){
+	char line[60];
+	int iteration;
+	rewind(fp);
+	while( fgets (line, 60, fp)!=NULL ) {
+		continue;	
+   	}
+   	sscanf(line, "total execution time: %d s", &iteration);
+   	return iteration;
+}
 
-	fprintf(fp,"iteracao 0\npid: %d execution time: %d s\ntotal execution time: 6 s\n", pid, exec_time);
+int obtemIteracao(){
+
+}
+void Atualiza(int pid,int exec_time){
+	int total_time;
+	rewind(fp);
+	if (fgetc(fp)==EOF){
+		printf("Nothing to update!\n");
+		return;
+	}
+	total_time=getTime()+exec_time;
+	fprintf(fp,"iteracao 0\npid: %d execution time: %d s\ntotal execution time: %d s\n", pid, exec_time,total_time );
 
 	
 }
 
-/*int getTime(){
-	
-	
-	while(fgets(line,60, fp)!=NULL){
-		puts(line);
-	}
-	
-	printf("%s\n",line );
-	sscanf(line, "%d", &tempo);
-	printf("%d\n",tempo );
-	return tempo;
-
-}*/
-
-void getTime(){
-	int c=fgetc(fp);
-	int flag1=0, n=-1;
-	while(c!=EOF){
-		if(c<=57 && c>=48){ /*verifica se é um numero*/
-			printf("encontrei um numero\n" );
-			if(flag1==0){	/*nao ha nenhum numero antes*/
-				flag1=1;
-				vetor[++n]=c-48;/*converte para int*/
-				n++;
-				c=fgetc(fp);
-			}
-			else{		/*ha um numero antes seguido,ou seja,o numero tem duas casas decimais ou mais*/
-				vetor[n++]=c-48;
-				c=fgetc(fp);
-			}
-		}
-		else{
-			flag1=0;
-			c=fgetc(fp);
-		}
-	}
-	vetor[++n]='\0';
-	for(n=0;n<15;n++)
-		printf("posicao %d: %d\n",n,vetor[n] );
-	flag1=0;
-	n=0;
-	while(n<15){
-		if(vetor[n++]==0 && flag1==0){
-			flag1=1;
-			break;
-		}
-		
-	}
-	printf("n = %d flag1=%d\n",n,flag1 );
-	/*sscanf(vetor, "%d",&iteracao);*/
-	for(flag1=0;flag1<n-1;flag1++){
-		if(iteracao==0)
-			iteracao=vetor[flag1];
-		else{
-			iteracao=(iteracao*10)+vetor[flag1];
-		}
-	}
-	printf("iteracao: %i\n",iteracao );
-}
 
 
 void *tarefaMonitora(){ /*Tarefa responsável por monitorizar os tempos de execução de cada processo filho */
@@ -159,7 +120,7 @@ void *tarefaMonitora(){ /*Tarefa responsável por monitorizar os tempos de execu
 Main Program
 */
 int main(int argc, char* argv[]){
-
+	
 	list = lst_new(); /*cria uma lista onde é guardado o PID e o status dos processos*/
 
 	argVector = (char**) malloc(NARGUMENTOS*sizeof(char*));
@@ -174,8 +135,9 @@ int main(int argc, char* argv[]){
 		perror("log.txt");
 		exit(EXIT_FAILURE);
 	}
-	/*fileUpdate(3630,6);*/
-	getTime();
+	//fprintf(fp,"iteracao 0\npid: 12345 execution time: 5 s\ntotal execution time: 10 s\n");
+	Atualiza(3630,6);
+	obtemTempo();
 	fclose(fp);
 
 	TID = pthread_create(&tid[0] ,NULL,tarefaMonitora,NULL);/*cria a tarefa monitora*/
