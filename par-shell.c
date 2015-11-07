@@ -29,7 +29,7 @@ Sistemas Operativos
 #include <semaphore.h>
 
 FILE *fp;
-char **argVector, line[60];
+char **argVector, line[60],vetor[10];
 int PID, TID, num_filhos=0, status=0, i, flag=0, tempo;
 pthread_t tid[1];/*cria um vetor com as tarefas a criar*/
 pthread_mutex_t mutex, cond_mutex;/*trinco*/
@@ -39,12 +39,12 @@ list_t* list;/*lista que guarda os processos filho*/
 
 void fileUpdate(int pid,int exec_time){
 
-	fprintf(fp,"iteracao \npid: %d execution time: %d s\ntotal execution time: 6 s", pid, exec_time);
+	fprintf(fp,"iteracao 0\npid: %d execution time: %d s\ntotal execution time: 6 s\n", pid, exec_time);
 
 	
 }
 
-int getTime(){
+/*int getTime(){
 	
 	
 	while(fgets(line,60, fp)!=NULL){
@@ -56,6 +56,33 @@ int getTime(){
 	printf("%d\n",tempo );
 	return tempo;
 
+}*/
+
+void getTime(){
+	int c=fgetc(fp);
+	int flag1=0, n=-1;
+	while(c!=EOF){
+		if(c<=57 && c>=48){ /*verifica se é um numero*/
+			printf("encontrei um numero\n" );
+			if(flag1==0){	/*nao ha nenhum numero antes*/
+				flag1=1;
+				vetor[++n]=c-48;/*converte para int*/
+				n++;
+				c=fgetc(fp);
+			}
+			else{		/*ha um numero antes seguido,ou seja,o numero tem duas casas decimais ou mais*/
+				vetor[n++]=c-48;
+				c=fgetc(fp);
+			}
+		}
+		else{
+			flag1=0;
+			c=fgetc(fp);
+		}
+	}
+	vetor[++n]='\0';
+	for(n=0;n<10;n++)
+		printf("posicao %d: %d\n",n,vetor[n] );
 }
 
 
@@ -128,7 +155,7 @@ int main(int argc, char* argv[]){
 		perror("log.txt");
 		exit(EXIT_FAILURE);
 	}
-	fileUpdate(3630,6);
+	/*fileUpdate(3630,6);*/
 	getTime();
 	fclose(fp);
 

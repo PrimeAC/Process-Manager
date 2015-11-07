@@ -1,0 +1,7 @@
+iteracao 0
+pid: 3630 execution time: 6 s
+total execution time: 6 s
+iteracao 1
+pid: 3631 execution time: 7 s
+total execution time: 13 s
+
