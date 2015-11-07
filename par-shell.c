@@ -38,7 +38,9 @@ time_t starttime, endtime;
 list_t* list;/*lista que guarda os processos filho*/
 
 int obtemTempo(){
+
 	int total_time;
+
 	rewind(fp);
 	while( fgets (line, 60, fp)!=NULL ) {
 		continue;	
@@ -47,19 +49,30 @@ int obtemTempo(){
    	return total_time;
 }
 
-/*int obtemIteracao(){
 
-}*/
-void Atualiza(int pid,int exec_time){
-	int total_time;
+int obtemIteracao(){
+   	int iteracao;
+   	char aux[15];
+   	rewind(fp);
+   	while( fgets (line, 60, fp)!=NULL ) {
+		if(line[0]==105){ /*verifica se a string comeca em i*/
+			strcpy(aux,line);	
+   		}
+   	}
+   	sscanf(aux, "iteracao %d", &iteracao);
+   	return iteracao;
+}
+
+void Atualiza(int pid, time_t exec_time){
+	int total_time,iteracao;
 	rewind(fp);
 	if (fgetc(fp)==EOF){
-		printf("Nothing to update!\n");
+		fprintf(fp,"iteracao 0\npid: %d execution time: %d s\ntotal execution time: %d s\n", pid, (int) exec_time,(int) exec_time);
 		return;
 	}
-	total_time=obtemTempo()+exec_time;
-	fprintf(fp,"iteracao 0\npid: %d execution time: %d s\ntotal execution time: %d s\n", pid, exec_time,total_time );
-
+	total_time=obtemTempo()+(int)exec_time;
+	iteracao=obtemIteracao()+1;
+	fprintf(fp,"iteracao %d\npid: %d execution time: %d s\ntotal execution time: %d s\n",iteracao, pid, (int) exec_time,total_time );
 	
 }
 
@@ -103,6 +116,7 @@ void *tarefaMonitora(){ /*Tarefa responsável por monitorizar os tempos de execu
 
 	          	else if(WIFEXITED(status)){ /*verifica se o processo terminou corretamente*/
 		            pthread_mutex_lock(&mutex);
+		            Atualiza(PID,time(NULL));
 		            update_terminated_process(list,PID,WEXITSTATUS(status),time(NULL)); /* guarda o status e o tempo final do processo*/
 		            pthread_mutex_unlock(&mutex);
 	          	}
@@ -121,7 +135,7 @@ Main Program
 int main(int argc, char* argv[]){
 	
 	list = lst_new(); /*cria uma lista onde é guardado o PID e o status dos processos*/
-
+	
 	argVector = (char**) malloc(NARGUMENTOS*sizeof(char*));
 
 	pthread_mutex_init(&mutex,NULL);/*inicializa o trinco*/
@@ -134,10 +148,7 @@ int main(int argc, char* argv[]){
 		perror("log.txt");
 		exit(EXIT_FAILURE);
 	}
-	//fprintf(fp,"iteracao 0\npid: 12345 execution time: 5 s\ntotal execution time: 10 s\n");
-	Atualiza(3630,6);
-	obtemTempo();
-	fclose(fp);
+	
 
 	TID = pthread_create(&tid[0] ,NULL,tarefaMonitora,NULL);/*cria a tarefa monitora*/
 
@@ -164,7 +175,8 @@ int main(int argc, char* argv[]){
 			    
 			    lst_print(list);/*imprime a lista dos processos filho*/
 			    lst_destroy(list);/*apaga todos os elementos da lista*/
-
+			    fflush(fp);
+			    fclose(fp);
 			    free(argVector[0]);
 			    free(argVector);
 
