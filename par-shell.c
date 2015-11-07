@@ -29,8 +29,8 @@ Sistemas Operativos
 #include <semaphore.h>
 
 FILE *fp;
-char **argVector, line[60],vetor[15];
-int PID, TID, num_filhos=0, status=0, i, flag=0, tempo,iteracao;
+char **argVector, line[60];
+int PID, TID, num_filhos=0, status=0, i, flag=0, tempo, iteracao;
 pthread_t tid[1];/*cria um vetor com as tarefas a criar*/
 pthread_mutex_t mutex, cond_mutex;/*trinco*/
 pthread_cond_t semFilhos, numProcessos;
@@ -38,28 +38,41 @@ time_t starttime, endtime;
 list_t* list;/*lista que guarda os processos filho*/
 
 int obtemTempo(){
-	char line[60];
-	int iteration;
+	
 	rewind(fp);
 	while( fgets (line, 60, fp)!=NULL ) {
 		continue;	
    	}
-   	sscanf(line, "total execution time: %d s", &iteration);
-   	return iteration;
+   	sscanf(line, "total execution time: %d s", &tempo);
+   	return tempo;
 }
 
 int obtemIteracao(){
 
+   	int i;
+   	char line1[15];
+   	rewind(fp);
+   	while( fgets (line, 60, fp)!=NULL ) {
+		if(line[0]==105){ /*verifica se a string comeca em i*/
+			for(i=0;i<15;i++){
+				line1[i]=line[i];/*line1 guarda a ultima string começada por i, onde esta a iteraçao*/
+			}	
+   		}
+   	}
+   	sscanf(line1, "iteracao %d", &iteracao);
+   	return iteracao;
 }
+
 void Atualiza(int pid,int exec_time){
 	int total_time;
 	rewind(fp);
 	if (fgetc(fp)==EOF){
-		printf("Nothing to update!\n");
+		fprintf(fp,"iteracao 0\npid: %d execution time: %d s\ntotal execution time: %d s\n", pid, exec_time,exec_time);
 		return;
 	}
-	total_time=getTime()+exec_time;
-	fprintf(fp,"iteracao 0\npid: %d execution time: %d s\ntotal execution time: %d s\n", pid, exec_time,total_time );
+	total_time=obtemTempo()+exec_time;
+	iteracao=obtemIteracao()+1;
+	fprintf(fp,"iteracao %d\npid: %d execution time: %d s\ntotal execution time: %d s\n",iteracao, pid, exec_time,total_time );
 
 	
 }
@@ -135,9 +148,9 @@ int main(int argc, char* argv[]){
 		perror("log.txt");
 		exit(EXIT_FAILURE);
 	}
-	//fprintf(fp,"iteracao 0\npid: 12345 execution time: 5 s\ntotal execution time: 10 s\n");
-	Atualiza(3630,6);
-	obtemTempo();
+	for(i=0;i<5;i++){
+		Atualiza(i,6);
+	}
 	fclose(fp);
 
 	TID = pthread_create(&tid[0] ,NULL,tarefaMonitora,NULL);/*cria a tarefa monitora*/
