@@ -29,8 +29,8 @@ Sistemas Operativos
 #include <semaphore.h>
 
 FILE *fp;
-char **argVector, line[60],vetor[10];
-int PID, TID, num_filhos=0, status=0, i, flag=0, tempo;
+char **argVector, line[60],vetor[15];
+int PID, TID, num_filhos=0, status=0, i, flag=0, tempo,iteracao;
 pthread_t tid[1];/*cria um vetor com as tarefas a criar*/
 pthread_mutex_t mutex, cond_mutex;/*trinco*/
 pthread_cond_t semFilhos, numProcessos;
@@ -81,8 +81,27 @@ void getTime(){
 		}
 	}
 	vetor[++n]='\0';
-	for(n=0;n<10;n++)
+	for(n=0;n<15;n++)
 		printf("posicao %d: %d\n",n,vetor[n] );
+	flag1=0;
+	n=0;
+	while(n<15){
+		if(vetor[n++]==0 && flag1==0){
+			flag1=1;
+			break;
+		}
+		
+	}
+	printf("n = %d flag1=%d\n",n,flag1 );
+	/*sscanf(vetor, "%d",&iteracao);*/
+	for(flag1=0;flag1<n-1;flag1++){
+		if(iteracao==0)
+			iteracao=vetor[flag1];
+		else{
+			iteracao=(iteracao*10)+vetor[flag1];
+		}
+	}
+	printf("iteracao: %i\n",iteracao );
 }
 
 
