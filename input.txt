@@ -1,7 +1,3 @@
-fibonacci 2000
-fibonacci 4500
-fibonacci 34005
-fibonacci 3500
-fibonacci 600
-fibonacci 1000
+fibonacci 20000
+fibonacci 10
 exit

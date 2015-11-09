@@ -38,5 +38,8 @@ void insert_new_process(list_t *list, int pid, time_t starttime);
 /* lst_remove - remove first item of value 'value' from list 'list' */
 void update_terminated_process(list_t *list, int pid, int status, time_t endtime);
 
+/*get_execution_time - searches in the list for the pid and returns the exection time of that process*/
+int get_execution_time(list_t *list, int pid);
+
 /* lst_print - print the content of list 'list' to standard output */
 void lst_print(list_t *list);

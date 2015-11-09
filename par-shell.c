@@ -63,16 +63,18 @@ int obtemIteracao(){
    	return iteracao;
 }
 
-void Atualiza(int pid, time_t exec_time){
+void Atualiza(int pid, int exec_time){
 	int total_time,iteracao;
 	rewind(fp);
 	if (fgetc(fp)==EOF){
-		fprintf(fp,"iteracao 0\npid: %d execution time: %d s\ntotal execution time: %d s\n", pid, (int) exec_time,(int) exec_time);
+		fprintf(fp,"iteracao 0\npid: %d execution time: %d s\ntotal execution time: %d s\n", pid, 
+			exec_time, exec_time);
 		return;
 	}
-	total_time=obtemTempo()+(int)exec_time;
+	total_time=obtemTempo()+exec_time;
 	iteracao=obtemIteracao()+1;
-	fprintf(fp,"iteracao %d\npid: %d execution time: %d s\ntotal execution time: %d s\n",iteracao, pid, (int) exec_time,total_time );
+	fprintf(fp,"iteracao %d\npid: %d execution time: %d s\ntotal execution time: %d s\n",iteracao, pid, 
+		exec_time,total_time );
 	
 }
 
@@ -116,8 +118,8 @@ void *tarefaMonitora(){ /*Tarefa responsável por monitorizar os tempos de execu
 
 	          	else if(WIFEXITED(status)){ /*verifica se o processo terminou corretamente*/
 		            pthread_mutex_lock(&mutex);
-		            Atualiza(PID,time(NULL));
 		            update_terminated_process(list,PID,WEXITSTATUS(status),time(NULL)); /* guarda o status e o tempo final do processo*/
+		            Atualiza(PID,get_execution_time(list,PID));
 		            pthread_mutex_unlock(&mutex);
 	          	}
 

@@ -62,6 +62,20 @@ void update_terminated_process(list_t *list, int pid, int status, time_t endtime
 	}
 }
 
+int get_execution_time(list_t *list, int pid){
+	lst_iitem_t *item;
+
+	item = list->first;
+	while(item != NULL){
+		if((item->pid)==pid){
+			return (int) (item->endtime-item->starttime);
+		}
+		item = item->next;
+	}
+	perror("Process not found!");
+	return -1;
+}
+
 
 void lst_print(list_t *list)
 {
@@ -69,7 +83,6 @@ void lst_print(list_t *list)
 
 	printf("Process list:\n");
 	item = list->first;
-	/*while(1){  */
 	while (item != NULL){
 		printf("PID:%d STATUS:%d DURATION:%d\n", item->pid, item->status, (int) (item->endtime-item->starttime));
 		item = item->next;
