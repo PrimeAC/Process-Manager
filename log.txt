@@ -1,3 +1,42 @@
 iteracao 0
-pid: 3915 execution time: 1446925042 s
-total execution time: 1446925042 s
+pid: 22170 execution time: 0 s
+total execution time: 0 s
+iteracao 1
+pid: 22169 execution time: 3 s
+total execution time: 3 s
+iteracao 2
+pid: 22192 execution time: 0 s
+total execution time: 3 s
+iteracao 3
+pid: 22191 execution time: 4 s
+total execution time: 7 s
+iteracao 4
+pid: 22231 execution time: 0 s
+total execution time: 7 s
+iteracao 5
+pid: 22230 execution time: 3 s
+total execution time: 10 s
+iteracao 6
+pid: 22238 execution time: 0 s
+total execution time: 10 s
+iteracao 6
+pid: 22237 execution time: 3 s
+total execution time: 13 s
+iteracao 7
+pid: 22267 execution time: 0 s
+total execution time: 13 s
+iteracao 8
+pid: 22266 execution time: 3 s
+total execution time: 16 s
+iteracao 9
+pid: 22323 execution time: 0 s
+total execution time: 16 s
+iteracao 10
+pid: 22322 execution time: 3 s
+total execution time: 19 s
+iteracao 11
+pid: 22330 execution time: 0 s
+total execution time: 19 s
+iteracao 12
+pid: 22329 execution time: 3 s
+total execution time: 22 s
