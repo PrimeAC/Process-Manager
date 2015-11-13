@@ -29,7 +29,7 @@ Sistemas Operativos
 #include <semaphore.h>
 
 FILE *fp;
-char **argVector, line[60];
+char **argVector;
 int PID, TID, num_filhos=0, status=0, flag=0, total_time, iteracao;
 pthread_t tid[1];/*cria um vetor com as tarefas a criar*/
 pthread_mutex_t mutex, cond_mutex;/*trinco*/
@@ -95,7 +95,12 @@ void verificaFormato(){
 			}
 		}
    	}
+   	if(sscanf(line, "total execution time: %d s", &total_time)==0){ /*verifica se a ultima linha do ficheiro e a do total time*/
+   		printf("Ficheiro em formato inválido\n");
+		exit(EXIT_FAILURE);
+	}
 }
+
 void *tarefaMonitora(){ /*Tarefa responsável por monitorizar os tempos de execução de cada processo filho */
 
 	printf("Tarefa monitora inicializada!\n");
