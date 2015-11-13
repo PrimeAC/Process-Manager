@@ -42,7 +42,7 @@ int obtemTempo(){
 	int total_time;
 
 	rewind(fp);
-	while( fgets (line, 60, fp)!=NULL ) {
+	while( fgets (line, 60, fp)!=NULL ) { /*verifica se esta na ultima linha*/
 		continue;	
    	}
    	sscanf(line, "total execution time: %d s", &total_time);
@@ -66,7 +66,7 @@ int obtemIteracao(){
 void Atualiza(int pid, int exec_time){
 	int total_time,iteracao;
 	rewind(fp);
-	if (fgetc(fp)==EOF){
+	if (fgetc(fp)==EOF){ /*se o ficheiro estiver vazio*/
 		fprintf(fp,"iteracao 0\npid: %d execution time: %d s\ntotal execution time: %d s\n", pid, 
 			exec_time, exec_time);
 		return;
@@ -92,7 +92,7 @@ void *tarefaMonitora(){ /*Tarefa responsável por monitorizar os tempos de execu
 	     	if(flag==0){/*verifica se foi acionado o comando exit*/
 	        	pthread_mutex_unlock(&mutex); 
 	        	pthread_mutex_lock(&cond_mutex);
-	        	while (num_filhos==0 && flag==0) pthread_cond_wait(&semFilhos, &cond_mutex);
+	        	while (num_filhos==0 && flag==0) pthread_cond_wait(&semFilhos, &cond_mutex); /*bloqueia e fica a espera do signal*/
 	        	pthread_mutex_unlock(&cond_mutex);
 	      	}
 	      
@@ -109,7 +109,6 @@ void *tarefaMonitora(){ /*Tarefa responsável por monitorizar os tempos de execu
 	         
 	          	PID=wait(&status);/*aguarda que os processos filhos terminem*/ 
 
-	      		pthread_cond_signal(&numProcessos);
 	      		
 
 	         	if(PID<0){/*verifica se houve erro fatal no processo*/
@@ -119,13 +118,14 @@ void *tarefaMonitora(){ /*Tarefa responsável por monitorizar os tempos de execu
 	          	else if(WIFEXITED(status)){ /*verifica se o processo terminou corretamente*/
 		            pthread_mutex_lock(&mutex);
 		            update_terminated_process(list,PID,WEXITSTATUS(status),time(NULL)); /* guarda o status e o tempo final do processo*/
-		            Atualiza(PID,get_execution_time(list,PID));
+		            Atualiza(PID,get_execution_time(list,PID)); /*escreve no ficheiro */
 		            pthread_mutex_unlock(&mutex);
 	          	}
 
 		        pthread_mutex_lock(&mutex);
 		        num_filhos--;
 		        pthread_mutex_unlock(&mutex);
+	      		pthread_cond_signal(&numProcessos); /*asinala que terminou um processo */
 	      	}
 	    }
 	}
@@ -170,7 +170,7 @@ int main(int argc, char* argv[]){
 			    flag=1;/*memoriza o acionamento do comando exit*/
 			    pthread_mutex_unlock(&mutex);
 
-			    pthread_cond_signal(&semFilhos);
+			    pthread_cond_signal(&semFilhos); /*desbloquia a tarefa monitora podendo assim terminar  */
 			    pthread_mutex_unlock(&cond_mutex);
 			   
 			    pthread_join(tid[0],NULL);/*aguarda que a tarefa monitora termine*/
@@ -194,7 +194,7 @@ int main(int argc, char* argv[]){
 			else {
 		    	 
 		    	pthread_mutex_lock(&cond_mutex);
-		    	while(num_filhos>=MAXPAR) pthread_cond_wait(&numProcessos,&cond_mutex);
+		    	while(num_filhos>=MAXPAR) pthread_cond_wait(&numProcessos,&cond_mutex); /*bloqueia quando esta a correr o numero max de processo permitidos*/
 		    	pthread_mutex_unlock(&cond_mutex);
 			    PID=fork();/*guarda na variavel PID o resultado da funçao fork*/
 			    
@@ -220,7 +220,7 @@ int main(int argc, char* argv[]){
 		  	insert_new_process(list, PID, time(NULL));/*insere na lista o PID  e o tempo inicial do processo filho*/
 		  	pthread_mutex_unlock(&mutex);
 		  	
-		  	pthread_cond_signal(&semFilhos);
+		  	pthread_cond_signal(&semFilhos);  /*da signal para a tarefa monitora desbloquear */
 		  	
 		  	free(argVector[0]);
 	    } 
