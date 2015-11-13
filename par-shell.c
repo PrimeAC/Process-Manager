@@ -30,56 +30,72 @@ Sistemas Operativos
 
 FILE *fp;
 char **argVector, line[60];
-int PID, TID, num_filhos=0, status=0, i, flag=0;
+int PID, TID, num_filhos=0, status=0, flag=0, total_time, iteracao;
 pthread_t tid[1];/*cria um vetor com as tarefas a criar*/
 pthread_mutex_t mutex, cond_mutex;/*trinco*/
 pthread_cond_t semFilhos, numProcessos;
 time_t starttime, endtime;
 list_t* list;/*lista que guarda os processos filho*/
 
-int obtemTempo(){
 
-	int total_time;
-
-	rewind(fp);
-	while( fgets (line, 60, fp)!=NULL ) { /*verifica se esta na ultima linha*/
-		continue;	
-   	}
-   	sscanf(line, "total execution time: %d s", &total_time);
-   	return total_time;
-}
-
-
-int obtemIteracao(){
-   	int iteracao;
-   	char aux[15];
-   	rewind(fp);
-   	while( fgets (line, 60, fp)!=NULL ) {
-		if(line[0]==105){ /*verifica se a string comeca em i*/
-			strcpy(aux,line);	
-   		}
-   	}
-   	sscanf(aux, "iteracao %d", &iteracao);
-   	return iteracao;
-}
-
-void Atualiza(int pid, int exec_time){
-	int total_time,iteracao;
+void FileManager(int pid, int exec_time){
 	rewind(fp);
 	if (fgetc(fp)==EOF){ /*se o ficheiro estiver vazio*/
 		fprintf(fp,"iteracao 0\npid: %d execution time: %d s\ntotal execution time: %d s\n", pid, 
 			exec_time, exec_time);
 		return;
 	}
-	total_time=obtemTempo()+exec_time;
-	iteracao=obtemIteracao()+1;
-	fprintf(fp,"iteracao %d\npid: %d execution time: %d s\ntotal execution time: %d s\n",iteracao, pid, 
-		exec_time,total_time );
-	
+	else {
+		iteracao++;
+   		fprintf(fp,"iteracao %d\npid: %d execution time: %d s\ntotal execution time: %d s\n",iteracao, pid, 
+		exec_time,total_time+exec_time);
+
+	}	
 }
 
+void verificaFormato(){
+	int i=0, pid_aux, exec_time_aux;
+	char line[60];
 
+	rewind(fp);
+	if (fgetc(fp)==EOF){ /*se o ficheiro estiver vazio*/
+		return;
+	}
 
+	rewind(fp);
+	while( fgets (line, 60, fp)!=NULL ) { /*verifica se esta na ultima linha*/
+		if(i==0){
+			if(sscanf(line, "iteracao %d", &iteracao)!=0){
+				i++;
+				continue;
+			}
+			else{
+				printf("Ficheiro em formato inválido\n");
+				exit(EXIT_FAILURE);
+			}
+		}
+		else if(i==1){
+			if(sscanf(line, "pid: %d execution time: %d s", &pid_aux, &exec_time_aux)!=0){
+				i++;
+				continue;
+			}
+			else{
+				printf("Ficheiro em formato inválido\n");
+				exit(EXIT_FAILURE);
+			}
+		}
+		else if(i==2){
+			if(sscanf(line, "total execution time: %d s", &total_time)!=0){
+				i=0;
+				continue;
+			}
+			else{
+				printf("Ficheiro em formato inválido\n");
+				exit(EXIT_FAILURE);
+			}
+		}
+   	}
+}
 void *tarefaMonitora(){ /*Tarefa responsável por monitorizar os tempos de execução de cada processo filho */
 
 	printf("Tarefa monitora inicializada!\n");
@@ -118,7 +134,7 @@ void *tarefaMonitora(){ /*Tarefa responsável por monitorizar os tempos de execu
 	          	else if(WIFEXITED(status)){ /*verifica se o processo terminou corretamente*/
 		            pthread_mutex_lock(&mutex);
 		            update_terminated_process(list,PID,WEXITSTATUS(status),time(NULL)); /* guarda o status e o tempo final do processo*/
-		            Atualiza(PID,get_execution_time(list,PID)); /*escreve no ficheiro */
+		            FileManager(PID,get_execution_time(list,PID)); /*escreve no ficheiro */
 		            pthread_mutex_unlock(&mutex);
 	          	}
 
@@ -151,6 +167,7 @@ int main(int argc, char* argv[]){
 		exit(EXIT_FAILURE);
 	}
 	
+	verificaFormato();
 
 	TID = pthread_create(&tid[0] ,NULL,tarefaMonitora,NULL);/*cria a tarefa monitora*/
 
