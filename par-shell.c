@@ -15,6 +15,8 @@ Sistemas Operativos
 */
 #define NARGUMENTOS 7
 #define MAXPAR 4
+#define LOGFILE "log.txt"
+#define EXIT_COMMAND "exit"
 
 
 #include <stdio.h>
@@ -28,8 +30,12 @@ Sistemas Operativos
 #include <pthread.h>
 #include <semaphore.h>
 
-FILE *fp;
+/* 
+Variaveis Globais 
+*/
+
 char **argVector;
+FILE *fp;
 int PID, TID, num_filhos=0, status=0, flag=0, total_time, iteracao;
 pthread_t tid[1];/*cria um vetor com as tarefas a criar*/
 pthread_mutex_t mutex, cond_mutex;/*trinco*/
@@ -37,7 +43,9 @@ pthread_cond_t semFilhos, numProcessos;
 time_t starttime, endtime;
 list_t* list;/*lista que guarda os processos filho*/
 
-
+/* 
+Funcoes auxiliares do ficheiro 
+*/
 void FileManager(int pid, int exec_time){
 	rewind(fp);
 	if (fgetc(fp)==EOF){ /*se o ficheiro estiver vazio*/
@@ -50,6 +58,10 @@ void FileManager(int pid, int exec_time){
    		fprintf(fp,"iteracao %d\npid: %d execution time: %d s\ntotal execution time: %d s\n",iteracao, pid, 
 		exec_time,total_time+exec_time);
 
+	}
+	if (fflush(fp)) {
+		perror("Error ate flushing file");
+		exit(EXIT_FAILURE);
 	}	
 }
 
@@ -101,9 +113,21 @@ void verificaFormato(){
 	}
 }
 
+/* 
+Tarefa Monitora 
+*/
+
 void *tarefaMonitora(){ /*Tarefa responsável por monitorizar os tempos de execução de cada processo filho */
 
 	printf("Tarefa monitora inicializada!\n");
+
+	fp=fopen(LOGFILE, "a+");
+	if (fp==NULL){
+		perror("Error opening/creating file");
+		exit(EXIT_FAILURE);
+	}
+	
+	verificaFormato();
 
 	while (1){
     
@@ -133,6 +157,7 @@ void *tarefaMonitora(){ /*Tarefa responsável por monitorizar os tempos de execu
 	      		
 
 	         	if(PID<0){/*verifica se houve erro fatal no processo*/
+	      			perror("Error at child waiting");
 	            	continue;
 	          	}
 
@@ -153,7 +178,7 @@ void *tarefaMonitora(){ /*Tarefa responsável por monitorizar os tempos de execu
 }
 
 /*
-Main Program
+Main thread
 */
 int main(int argc, char* argv[]){
 	
@@ -161,23 +186,24 @@ int main(int argc, char* argv[]){
 	
 	argVector = (char**) malloc(NARGUMENTOS*sizeof(char*));
 
-	pthread_mutex_init(&mutex,NULL);/*inicializa o trinco*/
-
-	pthread_cond_init(&semFilhos,NULL);
-	pthread_cond_init(&numProcessos, NULL);
-	
-	fp=fopen("log.txt", "a+");
-	if (fp==NULL){
-		perror("log.txt");
+	if(pthread_mutex_init(&mutex,NULL)) { /*inicializa o trinco*/
+		perror("Error at mutex initialization");
 		exit(EXIT_FAILURE);
 	}
-	
-	verificaFormato();
 
-	TID = pthread_create(&tid[0] ,NULL,tarefaMonitora,NULL);/*cria a tarefa monitora*/
+	if(pthread_cond_init(&semFilhos,NULL)) {
+		perror("Error at initialization of condition variable: semFilhos");
+		exit(EXIT_FAILURE);
+	}
 
-	if (TID!=0){/*verifica se houve um erro a criar a tarefa*/
-		perror("");
+	if(pthread_cond_init(&numProcessos, NULL)) {
+		perror("Error at initialization of condition variable: numProcessos");
+		exit(EXIT_FAILURE);
+	}
+
+	if(pthread_create(&tid[0] ,NULL,tarefaMonitora,NULL) != 0) { /*cria a tarefa monitora*/
+		perror("Error at thread creation");
+		exit(EXIT_FAILURE);
 	}
 
 	while(1){
@@ -185,7 +211,7 @@ int main(int argc, char* argv[]){
 
 		if(readLineArguments(argVector, NARGUMENTOS)>0){ /*verifica se o utilizador escreveu algo */
 		  
-			if(strcmp(argVector[0], "exit")==0){
+			if(strcmp(argVector[0], EXIT_COMMAND)==0){
 		    
 
 			    pthread_mutex_lock(&mutex);
@@ -195,20 +221,34 @@ int main(int argc, char* argv[]){
 			    pthread_cond_signal(&semFilhos); /*desbloquia a tarefa monitora podendo assim terminar  */
 			    pthread_mutex_unlock(&cond_mutex);
 			   
-			    pthread_join(tid[0],NULL);/*aguarda que a tarefa monitora termine*/
+			    if (pthread_join(tid[0],NULL)) { /*aguarda que a tarefa monitora termine*/
+			    	perror("Error waiting for thread");
+			    	exit(EXIT_FAILURE);
+			    }
 			    
 			    lst_print(list);/*imprime a lista dos processos filho*/
 			    lst_destroy(list);/*apaga todos os elementos da lista*/
-			    fflush(fp);
-			    fclose(fp);
+
+			    if(fclose(fp)) {
+			    	perror("Error at file closing");
+			    	exit(EXIT_FAILURE);
+			    }
+
 			    free(argVector[0]);
 			    free(argVector);
 
 			    pthread_mutex_destroy(&mutex);/*elimina o mutex e liberta os recursos a ele associados*/
 			    pthread_mutex_destroy(&cond_mutex);
 
-			    pthread_cond_destroy(&semFilhos);
-			    pthread_cond_destroy(&numProcessos);
+			    if(pthread_cond_destroy(&semFilhos)) {
+			    	perror("Error at destruction of condition: semFilhos");
+			    	exit(EXIT_FAILURE);
+			    }
+
+			    if(pthread_cond_destroy(&numProcessos)) {
+			    	perror("Error ate destruction of condition: numProcessos");
+			    	exit(EXIT_FAILURE);
+			    }
 
 			    exit(EXIT_SUCCESS);/*termina o processo pai*/
 			}
@@ -228,7 +268,7 @@ int main(int argc, char* argv[]){
 			      
 					if(execv(argVector[0],argVector)<0){ /*verifica se ocorreu um erro a correr o executavel*/
 
-			      		perror("");
+			      		perror("Error at execution");
 				        free(argVector[0]);
 				        free(argVector);
 				        exit(EXIT_FAILURE);/*termina o processo filho*/
@@ -248,7 +288,7 @@ int main(int argc, char* argv[]){
 	    } 
 
 		else{
-	  		printf("Por favor insira um argumento válido!\n");
+	  		printf("Please insert a valid argument!\n");
 		}
 	}
 }
