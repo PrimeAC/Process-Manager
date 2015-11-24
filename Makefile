@@ -15,4 +15,4 @@ par-shell.o: par-shell.c commandlinereader.h list.h
 fibonacci: fibonacci.c
 	gcc -o fibonacci fibonacci.c
 clear:
-	rm -f *.o par-shell fibonacci
+	rm -f *.o par-shell fibonacci log.txt
