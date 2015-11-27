@@ -29,12 +29,13 @@ Sistemas Operativos
 #include <sys/wait.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <fcntl.h>
 
 /* 
 Variaveis Globais 
 */
 
-char **argVector;
+char **argVector, buffer[50];
 FILE *fp;
 int PID, TID, num_filhos=0, status=0, flag=0, total_time, iteracao;
 pthread_t tid[1];/*cria um vetor com as tarefas a criar*/
@@ -91,7 +92,6 @@ void FileManager(int pid, int exec_time){
 		exec_time,total_time+exec_time);
 
 	}
-	printf("Fiz flush\n");
 	if (fflush(fp)) {
 		perror("Error at flushing file");
 		exit(EXIT_FAILURE);
@@ -292,13 +292,18 @@ int main(int argc, char* argv[]){
 		    	while(num_filhos>=MAXPAR) condition_wait(&numProcessos, &cond_mutex); /*bloqueia quando esta a correr o numero max de processo permitidos*/
 		    	mutex_unlock(&cond_mutex);
 			    PID=fork();/*guarda na variavel PID o resultado da funçao fork*/
-			    
+
+
 			    if(PID<0){  /*caso ocorra erro na criacao do processo filho*/
-			    	perror("");
+			    	perror("Error at child creation");
 			    }
 
 			    else if(PID==0){/*processo filho*/
-			      
+				    close(1);
+				    sprintf(buffer, "par-shell-out-%d.txt", getpid());
+				
+				    open(buffer, O_WRONLY | O_CREAT);
+		
 					if(execv(argVector[0],argVector)<0){ /*verifica se ocorreu um erro a correr o executavel*/
 
 			      		perror("Error at execution");
