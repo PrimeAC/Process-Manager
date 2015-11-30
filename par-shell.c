@@ -17,6 +17,8 @@ Sistemas Operativos
 #define MAXPAR 4
 #define LOGFILE "log.txt"
 #define EXIT_COMMAND "exit"
+#define PREMISSOES 0666
+#define DIM 20
 
 
 #include <stdio.h>
@@ -30,6 +32,8 @@ Sistemas Operativos
 #include <pthread.h>
 #include <semaphore.h>
 #include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 /* 
 Variaveis Globais 
@@ -241,8 +245,17 @@ int main(int argc, char* argv[]){
 
 	while(1){
 
+		int fserv;
+		char myfifo[DIM] = "par-shell-in" ;
 
-		if(readLineArguments(argVector, NARGUMENTOS)>0){ /*verifica se o utilizador escreveu algo */
+		//if(mkfifo(myfifo,PREMISSOES)<0)
+		//	exit(-1);
+		fserv=open(myfifo,O_RDONLY);
+
+		read(fserv,argVector,20);
+		close(fserv);
+
+		//if(readLineArguments(argVector, NARGUMENTOS)>0){ /*verifica se o utilizador escreveu algo */
 		  
 			if(strcmp(argVector[0], EXIT_COMMAND)==0){
 		    
@@ -323,11 +336,11 @@ int main(int argc, char* argv[]){
 		  	condition_signal(&semFilhos);  /*da signal para a tarefa monitora desbloquear */
 		  	
 		  	free(argVector[0]);
-	    } 
+	     
 
-		else{
-	  		printf("Please insert a valid argument!\n");
-		}
+		//else{
+	  	//	printf("Please insert a valid argument!\n");
+		//}
 	}
 }
 
