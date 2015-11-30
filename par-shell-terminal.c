@@ -27,20 +27,28 @@ Main thread
 */
 int main(int argc, char* argv[]){
 	
-	char **argVector;
+	char **argVector, *myfifo="par-shell-in";
 	argVector = (char**) malloc(NARGUMENTOS*sizeof(char*));
 	int fserv;
-	char myfifo[DIM]="par-shell-in";
+	//char myfifo[DIM]="par-shell-in";
+
+	unlink(myfifo);
+
+	if (mkfifo (myfifo, 0777) < 0) {
+		perror("Error creating FIFO");
+		exit(EXIT_FAILURE);
+	}
 	
-	if ((fserv = open(myfifo,O_WRONLY))<0)
+	if ((fserv = open(myfifo,O_WRONLY))<0) {
+		perror("Error associating FIFO in par-shell-terminal");
 		exit(-1);
+	}
 
 	if(readLineArguments(argVector, NARGUMENTOS)>0){ /*verifica se o utilizador escreveu algo */
 
 		write(fserv,argVector,DIM);
-		close(fserv);
-		unlink(myfifo);
-
 	}
-
+	close(fserv);
+	unlink(myfifo);
+	exit(EXIT_SUCCESS);
 }

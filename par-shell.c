@@ -248,14 +248,17 @@ int main(int argc, char* argv[]){
 		int fserv;
 		char myfifo[DIM] = "par-shell-in" ;
 
-		//if(mkfifo(myfifo,PREMISSOES)<0)
-		//	exit(-1);
-		fserv=open(myfifo,O_RDONLY);
+		/*if(mkfifo(myfifo,PREMISSOES)<0) {
+			perror("Error creating FIFO");
+			exit(-1);
+		}*/
+		if( (fserv=open(myfifo,O_RDONLY)) < 0) {
+			perror("Error associating FIFO in par-shell");
+			exit(EXIT_FAILURE);
+		}
 
 		read(fserv,argVector,20);
 		close(fserv);
-
-		//if(readLineArguments(argVector, NARGUMENTOS)>0){ /*verifica se o utilizador escreveu algo */
 		  
 			if(strcmp(argVector[0], EXIT_COMMAND)==0){
 		    
