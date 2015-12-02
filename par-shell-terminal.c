@@ -27,28 +27,30 @@ Main thread
 */
 int main(int argc, char* argv[]){
 	
-	char **argVector, *myfifo="par-shell-in";
-	argVector = (char**) malloc(NARGUMENTOS*sizeof(char*));
+	char *my_string;
+	my_string = (char*) malloc(NARGUMENTOS*sizeof(char));
 	int fserv;
-	//char myfifo[DIM]="par-shell-in";
+	size_t nbytes = NARGUMENTOS;
 
-	unlink(myfifo);
-
-	if (mkfifo (myfifo, 0777) < 0) {
-		perror("Error creating FIFO");
+	if(argv[1] == NULL) {
+		printf("%s\n","Too few arguments!");
 		exit(EXIT_FAILURE);
 	}
-	
-	if ((fserv = open(myfifo,O_WRONLY))<0) {
+
+	if ((fserv = open(argv[1],O_WRONLY))<0) {
 		perror("Error associating FIFO in par-shell-terminal");
-		exit(-1);
+		exit(EXIT_FAILURE);
 	}
 
-	if(readLineArguments(argVector, NARGUMENTOS)>0){ /*verifica se o utilizador escreveu algo */
+	getline(&my_string, &nbytes, stdin);/*verifica se o utilizador escreveu algo */
 
-		write(fserv,argVector,DIM);
+	if( write(fserv,my_string,DIM) < 0){
+		perror("Error writing stream");
+		exit(EXIT_FAILURE);
 	}
+		
+
 	close(fserv);
-	unlink(myfifo);
 	exit(EXIT_SUCCESS);
+	
 }

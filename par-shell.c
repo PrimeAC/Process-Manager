@@ -246,20 +246,30 @@ int main(int argc, char* argv[]){
 	while(1){
 
 		int fserv;
-		char myfifo[DIM] = "par-shell-in" ;
+		char *myfifo = "par-shell-in" ;
+		char my_string[NARGUMENTOS];
 
-		/*if(mkfifo(myfifo,PREMISSOES)<0) {
+		unlink(myfifo);
+
+		if (mkfifo (myfifo, 0777) < 0) {
 			perror("Error creating FIFO");
-			exit(-1);
-		}*/
+			exit(EXIT_FAILURE);
+		}
+
 		if( (fserv=open(myfifo,O_RDONLY)) < 0) {
 			perror("Error associating FIFO in par-shell");
 			exit(EXIT_FAILURE);
 		}
 
-		read(fserv,argVector,20);
-		close(fserv);
-		  
+		
+		if( read(fserv,my_string,20) <0 ) {
+			perror("Error reading stream");
+			exit(EXIT_FAILURE);
+		}
+		//close(fserv);
+		close(0);
+		if(readLineArguments(argVector, NARGUMENTOS)>0){
+		
 			if(strcmp(argVector[0], EXIT_COMMAND)==0){
 		    
 
