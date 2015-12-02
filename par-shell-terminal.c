@@ -30,7 +30,7 @@ int main(int argc, char* argv[]){
 	char *my_string;
 	my_string = (char*) malloc(NARGUMENTOS*sizeof(char));
 	int fserv;
-	size_t nbytes = NARGUMENTOS;
+	//size_t nbytes = NARGUMENTOS;
 
 	if(argv[1] == NULL) {
 		printf("%s\n","Too few arguments!");
@@ -42,17 +42,19 @@ int main(int argc, char* argv[]){
 		exit(EXIT_FAILURE);
 	}
 	while (1) {
-		getline(&my_string, &nbytes, stdin);/*verifica se o utilizador escreveu algo */
-		
-		if (strcmp(my_string,"exit\n")==0) {
-			if( write(fserv,my_string,DIM) < 0){
+		fgets(my_string, 100, stdin);/*verifica se o utilizador escreveu algo */
+		if (strcmp(my_string,"exit-global\n")==0) {
+			if( write(fserv,my_string,strlen(my_string)) < 0){
 				perror("Error writing stream");
 				exit(EXIT_FAILURE);
 			}
 			break;
 		}
+		if (strcmp(my_string, "stats\n")==0) {
+
+		}
 		else {
-			if( write(fserv,my_string,DIM) < 0){
+			if( write(fserv,my_string,strlen(my_string)) < 0){
 				perror("Error writing stream");
 				exit(EXIT_FAILURE);
 			}
@@ -60,5 +62,4 @@ int main(int argc, char* argv[]){
 	}
 	close(fserv);
 	exit(EXIT_SUCCESS);
-	
 }

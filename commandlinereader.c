@@ -33,14 +33,14 @@ int readLineArguments(char **argVector, int vectorSize)
   int i;
 
   char *token;
-
+  
   if (argVector == NULL || vectorSize == 0)
     return 0;
 
   if (getline(&str, &size, stdin) < 0) {
     return -1;
   }
-   
+
   /* get the first token */
   token = strtok(str, s);
    

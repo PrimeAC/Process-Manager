@@ -264,6 +264,7 @@ int main(int argc, char* argv[]){
 			perror("Error reading stream");
 			exit(EXIT_FAILURE);
 		}*/
+		
 		if(readLineArguments(argVector, NARGUMENTOS)>0){
 
 			if(strcmp(argVector[0], EXIT_COMMAND)==0){
@@ -324,7 +325,7 @@ int main(int argc, char* argv[]){
 				    close(1);
 				    sprintf(buffer, "par-shell-out-%d.txt", getpid());
 				
-				    open(buffer, O_WRONLY | O_CREAT);
+				    open(buffer, O_WRONLY | O_CREAT, 0777);
 		
 					if(execv(argVector[0],argVector)<0){ /*verifica se ocorreu um erro a correr o executavel*/
 
@@ -345,12 +346,12 @@ int main(int argc, char* argv[]){
 		  	condition_signal(&semFilhos);  /*da signal para a tarefa monitora desbloquear */
 		  	
 		  	free(argVector[0]);
-	     
-
-		//else{
-	  	//	printf("Please insert a valid argument!\n");
-		//}
 		}
+		else{
+		  	printf("Please insert a valid argument!\n");
+		}
+
+		
 	}
 }
 
