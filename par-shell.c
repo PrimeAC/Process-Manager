@@ -17,7 +17,6 @@ Sistemas Operativos
 #define MAXPAR 4
 #define LOGFILE "log.txt"
 #define EXIT_COMMAND "exit"
-#define PREMISSOES 0666
 #define DIM 20
 
 
@@ -218,6 +217,9 @@ void *tarefaMonitora(){ /*Tarefa responsável por monitorizar os tempos de execu
 Main thread
 */
 int main(int argc, char* argv[]){
+	int fserv;
+	char *myfifo = "par-shell-in" ;
+	//char my_string[NARGUMENTOS];
 	
 	list = lst_new(); /*cria uma lista onde é guardado o PID e o status dos processos*/
 	
@@ -242,34 +244,28 @@ int main(int argc, char* argv[]){
 		perror("Error at thread creation");
 		exit(EXIT_FAILURE);
 	}
+	unlink(myfifo);
+
+	if (mkfifo (myfifo, 0777) < 0) {
+		perror("Error creating FIFO");
+		exit(EXIT_FAILURE);
+	}
+	if( (fserv=open(myfifo,O_RDONLY)) < 0) {
+		perror("Error associating FIFO in par-shell");
+		exit(EXIT_FAILURE);
+	}
+	//printf("%s\n", my_string);
+	close(0);
+	dup(fserv);
 
 	while(1){
 
-		int fserv;
-		char *myfifo = "par-shell-in" ;
-		char my_string[NARGUMENTOS];
-
-		unlink(myfifo);
-
-		if (mkfifo (myfifo, 0777) < 0) {
-			perror("Error creating FIFO");
-			exit(EXIT_FAILURE);
-		}
-
-		if( (fserv=open(myfifo,O_RDONLY)) < 0) {
-			perror("Error associating FIFO in par-shell");
-			exit(EXIT_FAILURE);
-		}
-
-		
-		if( read(fserv,my_string,20) <0 ) {
+		/*if( read(fserv,my_string,20) <0 ) {
 			perror("Error reading stream");
 			exit(EXIT_FAILURE);
-		}
-		//close(fserv);
-		close(0);
+		}*/
 		if(readLineArguments(argVector, NARGUMENTOS)>0){
-		
+
 			if(strcmp(argVector[0], EXIT_COMMAND)==0){
 		    
 
@@ -354,6 +350,7 @@ int main(int argc, char* argv[]){
 		//else{
 	  	//	printf("Please insert a valid argument!\n");
 		//}
+		}
 	}
 }
 

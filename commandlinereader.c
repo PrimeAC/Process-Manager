@@ -5,6 +5,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <unistd.h>
 
 /* 
 Reads up to 'vectorSize' space-separated arguments from the standard input

@@ -41,15 +41,23 @@ int main(int argc, char* argv[]){
 		perror("Error associating FIFO in par-shell-terminal");
 		exit(EXIT_FAILURE);
 	}
-
-	getline(&my_string, &nbytes, stdin);/*verifica se o utilizador escreveu algo */
-
-	if( write(fserv,my_string,DIM) < 0){
-		perror("Error writing stream");
-		exit(EXIT_FAILURE);
-	}
+	while (1) {
+		getline(&my_string, &nbytes, stdin);/*verifica se o utilizador escreveu algo */
 		
-
+		if (strcmp(my_string,"exit\n")==0) {
+			if( write(fserv,my_string,DIM) < 0){
+				perror("Error writing stream");
+				exit(EXIT_FAILURE);
+			}
+			break;
+		}
+		else {
+			if( write(fserv,my_string,DIM) < 0){
+				perror("Error writing stream");
+				exit(EXIT_FAILURE);
+			}
+		}
+	}
 	close(fserv);
 	exit(EXIT_SUCCESS);
 	
