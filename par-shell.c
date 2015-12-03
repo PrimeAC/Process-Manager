@@ -16,7 +16,8 @@ Sistemas Operativos
 #define NARGUMENTOS 7
 #define MAXPAR 4
 #define LOGFILE "log.txt"
-#define EXIT_COMMAND "exit"
+#define EXIT_COMMAND "exit-global"
+#define STATS_COMMAND "stats"
 #define DIM 20
 
 
@@ -217,8 +218,8 @@ void *tarefaMonitora(){ /*Tarefa responsável por monitorizar os tempos de execu
 Main thread
 */
 int main(int argc, char* argv[]){
-	int fserv;
-	char *myfifo = "par-shell-in" ;
+	int fserv, fclient;
+	char *myfifo = "par-shell-in";
 	//char my_string[NARGUMENTOS];
 	
 	list = lst_new(); /*cria uma lista onde é guardado o PID e o status dos processos*/
@@ -250,11 +251,14 @@ int main(int argc, char* argv[]){
 		perror("Error creating FIFO");
 		exit(EXIT_FAILURE);
 	}
+	printf("main4\n");
 	if( (fserv=open(myfifo,O_RDONLY)) < 0) {
 		perror("Error associating FIFO in par-shell");
 		exit(EXIT_FAILURE);
 	}
-	//printf("%s\n", my_string);
+	printf("main5\n");
+
+	printf("main1\n");
 	close(0);
 	dup(fserv);
 
@@ -264,11 +268,11 @@ int main(int argc, char* argv[]){
 			perror("Error reading stream");
 			exit(EXIT_FAILURE);
 		}*/
-		
+
 		if(readLineArguments(argVector, NARGUMENTOS)>0){
+			
 
 			if(strcmp(argVector[0], EXIT_COMMAND)==0){
-		    
 
 			    mutex_lock(&mutex);
 			    flag=1;/*memoriza o acionamento do comando exit*/
@@ -305,8 +309,31 @@ int main(int argc, char* argv[]){
 			    	perror("Error ate destruction of condition: numProcessos");
 			    	exit(EXIT_FAILURE);
 			    }
-
+			    close(fserv);
+			    close(fclient);
+			    unlink(myfifo);
 			    exit(EXIT_SUCCESS);/*termina o processo pai*/
+			}
+
+
+			if(strncmp(argVector[0], STATS_COMMAND,5)==0){
+		    	/*temos de mandar o numero de filhos e ler o tempo do ficheiro*/
+		    	char my_string[30];
+		    	printf("%s\n",argVector[1] );
+
+				if( (fclient=open(argVector[1],O_WRONLY)) < 0) {
+					perror("Error associating FIFO in par-shell");
+					exit(EXIT_FAILURE);
+				}
+		    	printf("%d %d\n", total_time, num_filhos );
+		    	sprintf(my_string, "Number of processes: %d total time: %d", num_filhos, total_time);
+		    	printf("%s\n",my_string );
+		    	if( write(fclient,my_string,strlen(my_string)) < 0){
+					perror("Error writing stream");
+					exit(EXIT_FAILURE);
+				}
+				free(argVector[0]);
+				continue;
 			}
 
 			else {
@@ -346,12 +373,12 @@ int main(int argc, char* argv[]){
 		  	condition_signal(&semFilhos);  /*da signal para a tarefa monitora desbloquear */
 		  	
 		  	free(argVector[0]);
-		}
-		else{
-		  	printf("Please insert a valid argument!\n");
-		}
+	     
 
-		
+		//else{
+	  	//	printf("Please insert a valid argument!\n");
+		//}
+		}
 	}
 }
 
