@@ -25,4 +25,4 @@ par-shell-terminal: commandlinereader.o par-shell-terminal.o
 fibonacci: fibonacci.c
 	gcc -o fibonacci fibonacci.c
 clear:
-	rm -f *.o par-shell par-shell-terminal fibonacci log.txt
+	rm -f *.o par-shell par-shell-terminal fibonacci log.txt 

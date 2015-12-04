@@ -92,8 +92,9 @@ void FileManager(int pid, int exec_time){
 	}
 	else {
 		iteracao++;
+		total_time+=exec_time;
    		fprintf(fp,"iteracao %d\npid: %d execution time: %d s\ntotal execution time: %d s\n",iteracao, pid, 
-		exec_time,total_time+exec_time);
+		exec_time,total_time);
 
 	}
 	if (fflush(fp)) {
@@ -268,7 +269,7 @@ int main(int argc, char* argv[]){
 			perror("Error reading stream");
 			exit(EXIT_FAILURE);
 		}*/
-
+		printf("mais uma ficha mais uma volta\n");
 		if(readLineArguments(argVector, NARGUMENTOS)>0){
 			
 
@@ -318,16 +319,17 @@ int main(int argc, char* argv[]){
 
 			if(strncmp(argVector[0], STATS_COMMAND,5)==0){
 		    	/*temos de mandar o numero de filhos e ler o tempo do ficheiro*/
-		    	char my_string[30];
-		    	printf("%s\n",argVector[1] );
+		    	char my_string[50];
+		    	printf("argvector:%s\n",argVector[1] );
 
 				if( (fclient=open(argVector[1],O_WRONLY)) < 0) {
 					perror("Error associating FIFO in par-shell");
 					exit(EXIT_FAILURE);
 				}
+				verificaFormato();
 		    	printf("%d %d\n", total_time, num_filhos );
 		    	sprintf(my_string, "Number of processes: %d total time: %d", num_filhos, total_time);
-		    	printf("%s\n",my_string );
+		    	printf("string:%s\n",my_string );
 		    	if( write(fclient,my_string,strlen(my_string)) < 0){
 					perror("Error writing stream");
 					exit(EXIT_FAILURE);
@@ -363,13 +365,14 @@ int main(int argc, char* argv[]){
 				    }
 				}
 	  		}
-	  
+	  		
 		  	mutex_lock(&mutex);
 		  	num_filhos++;
 
 		  	insert_new_process(list, PID, time(NULL));/*insere na lista o PID  e o tempo inicial do processo filho*/
 		  	mutex_unlock(&mutex);
-		  	
+		  	verificaFormato();
+		  	printf("%d %d %d\n", total_time, num_filhos,PID );
 		  	condition_signal(&semFilhos);  /*da signal para a tarefa monitora desbloquear */
 		  	
 		  	free(argVector[0]);
