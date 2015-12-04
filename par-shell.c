@@ -38,10 +38,11 @@ Sistemas Operativos
 /* 
 Variaveis Globais 
 */
+Link Head=NULL, Tail=NULL;
 
 char **argVector, buffer[50], my_string[50];
 FILE *fp;
-int PID, TID, num_filhos=0, status=0, flag=0, total_time, iteracao, list_terminal[DIM]={0}, i, val;
+int PID, TID, num_filhos=0, status=0, flag=0, total_time, iteracao, i, val;
 pthread_t tid[1];/*cria um vetor com as tarefas a criar*/
 pthread_mutex_t mutex, cond_mutex;/*trinco*/
 pthread_cond_t semFilhos, numProcessos;
@@ -222,15 +223,17 @@ void *tarefaMonitora(){ /*Tarefa responsável por monitorizar os tempos de execu
 	}
 }
 
-	void killTerminais(){
-		
-		int i;
-		for (i=0;i<DIM;i++){
-			if (list_terminal[i]!=0){
-				kill(list_terminal[i], SIGKILL);
-			}
+void killTerminais(){
+	
+	while(Head != NULL) {
+		if (kill(Head->item->PID, SIGKILL) <0) {
+			perror("Error sending kill to process");
+			exit(EXIT_FAILURE);
 		}
-		exit(EXIT_SUCCESS);
+
+		removeProcess(Head->item->PID);
+	}
+	exit(EXIT_SUCCESS);
 }
 
 /*
@@ -242,6 +245,8 @@ int main(int argc, char* argv[]){
 	//char my_string[NARGUMENTOS];
 	
 	list = lst_new(); /*cria uma lista onde é guardado o PID e o status dos processos*/
+
+	initialize();
 	
 	argVector = (char**) malloc(NARGUMENTOS*sizeof(char*));
 
@@ -283,23 +288,13 @@ int main(int argc, char* argv[]){
 
 	while(1){
 
-		/*if( read(fserv,my_string,20) <0 ) {
-			perror("Error reading stream");
-			exit(EXIT_FAILURE);
-		}*/
 		printf("mais uma ficha mais uma volta\n");
 		
 		if((val=readLineArguments(argVector, NARGUMENTOS))>0) {
 			
 			if(strncmp(argVector[0], "pid",3)==0){
 				
-				int i ;
-				for (i=0 ;i<DIM;i++){
-					if (list_terminal[i]==0){
-						list_terminal[i]=(atoi(argVector[1]));
-						break;
-					}
-				}
+				insertProcess(createProcess(atoi(argVector[1])));
 				free(argVector[0]);
 	
 				continue;
@@ -307,13 +302,8 @@ int main(int argc, char* argv[]){
 
 
 			if(strncmp(argVector[0], "remove",6)==0){
-				int i ;
-				for (i=0 ;i<DIM;i++){
-					if (list_terminal[i]==(atoi(argVector[1]))){
-						list_terminal[i]=0;
-						break;
-					}
-				}
+				
+				removeProcess(atoi(argVector[1]));
 				free(argVector[0]);
 
 				continue;
@@ -333,16 +323,10 @@ int main(int argc, char* argv[]){
 			    	exit(EXIT_FAILURE);
 			    }
 			    
-			    for (i=0 ;i<DIM;i++){
-			    	if (list_terminal[i] != 0) {
-						sprintf(my_string, "par-shell-%d", list_terminal[i]);
-						printf("vou fechar %d\n",list_terminal[i]);
-						sprintf(my_string, "par-shell-%d", list_terminal[i]);
-						kill(list_terminal[i], SIGKILL);
-						unlink(my_string);
-					}
+			    killTerminais();
+				unlink(my_string);
 					
-				}
+				
 
 			    lst_print(list);/*imprime a lista dos processos filho*/
 			    lst_destroy(list);/*apaga todos os elementos da lista*/

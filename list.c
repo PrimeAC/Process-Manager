@@ -89,3 +89,74 @@ void lst_print(list_t *list)
 	}
 	printf("-- END OF LIST.\n");
 }
+
+void initialize() {
+
+	Head = NULL;
+	Tail = NULL;
+}
+
+Item createProcess(int PID) {
+	Item newProcess = (Item) malloc(sizeof(struct process));
+
+	newProcess -> PID = PID;
+
+	return newProcess;
+	
+}
+
+Link newProcess(Item item, Link next) {
+
+	Link newProcess = (Link) malloc(sizeof(struct Pool));
+	
+	newProcess -> item = item;
+	newProcess -> next = next;
+
+	return newProcess;
+}
+
+void insertProcess(Item item) {
+
+	if (Head == NULL)
+		Tail = (Head = newProcess(item, Head));
+	else {
+		Tail -> next = newProcess(item,Tail -> next);
+		Tail = Tail -> next;
+	}
+}
+
+Link findProcess(Link Head, int PID) {
+
+	Link foundProcess;
+	
+	for (foundProcess = Head; foundProcess != NULL; foundProcess = foundProcess -> next) {
+		if (PID == foundProcess -> item -> PID)
+			return foundProcess;
+	}
+	return NULL;
+}
+
+void removeProcess(int PID) {
+	
+	Link foundProcess, previousProcess;
+
+	for (foundProcess = Head, previousProcess = NULL; foundProcess != NULL && foundProcess -> item -> PID != PID;
+			previousProcess = foundProcess, foundProcess = foundProcess -> next);
+	
+	if(foundProcess == NULL) {
+		printf("Process %d does not exist\n", PID);
+		return;
+	}
+	printf("O PID:%d foi removido\n", PID);
+
+	if(Head == foundProcess)
+		Head = foundProcess -> next;
+	else 
+		previousProcess -> next = foundProcess -> next;
+	if(foundProcess -> next == NULL)
+		Tail = previousProcess; 
+	
+	free(foundProcess -> item);
+	free(foundProcess);
+}
+

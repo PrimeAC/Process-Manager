@@ -59,7 +59,6 @@ int main(int argc, char* argv[]){
 		exit(EXIT_FAILURE);
 	}
 
-	signal (SIGINT, removepid);
 
 	if(argv[1] == NULL) {
 		printf("%s\n","Too few arguments!");
@@ -70,6 +69,7 @@ int main(int argc, char* argv[]){
 		perror("Error associating FIFO in par-shell-terminal");
 		exit(EXIT_FAILURE);
 	}
+	signal (SIGINT, removepid);
 
 	if (sprintf(terminal, "pid %d\n", getpid()) <0 ) {
 		perror("Error at sprintf");

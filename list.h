@@ -24,7 +24,19 @@ typedef struct {
    lst_iitem_t * first;
 } list_t;
 
+typedef struct process {
+	int PID;
+	} *Item;
 
+typedef struct Pool *Link;
+
+struct Pool {
+	Item item;
+	Link next;
+	};
+
+extern Link Head;
+extern Link Tail;
 
 /* lst_new - allocates memory for list_t and initializes it */
 list_t* lst_new();
@@ -43,3 +55,17 @@ int get_execution_time(list_t *list, int pid);
 
 /* lst_print - print the content of list 'list' to standard output */
 void lst_print(list_t *list);
+
+/* list_inicialization*/
+void initialize();
+
+
+Item createProcess(int PID);
+
+Link newProcess(Item item, Link next);
+
+void insertProcess(Item item);
+
+Link findProcess(Link Head, int PID);
+
+void removeProcess(int PID);
