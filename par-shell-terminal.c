@@ -22,19 +22,30 @@
 #include <sys/stat.h>
 
 /*PAR-SHELL-TERMINAL */
+int fserv, fclient,n;
+
+void removepid(){
+	char terminal1[20];
+	sprintf(terminal1, "remove %d\n", getpid());
+
+	if (write(fserv, terminal1, strlen(terminal1)) < 0) {
+		perror("");
+	    exit(EXIT_FAILURE);
+	}
+
+}
 /*
 Main thread
 */
 int main(int argc, char* argv[]){
 
-	char *my_string, *message, pipeout[20];
+	char *my_string, *message, pipeout[20], terminal[20];
 	my_string = (char*) malloc(NARGUMENTOS*sizeof(char));
 	message = (char*) malloc(DIM*sizeof(char));
-	//pipeout = (char*) malloc(DIM*sizeof(char));
-	int fserv, fclient;
 	size_t nbytes = DIM;
 	sprintf(pipeout, "par-shell-%d", getpid());
-	printf("%s\n",pipeout );
+
+	signal (SIGINT, removepid);
 
 	if(argv[1] == NULL) {
 		printf("%s\n","Too few arguments!");
@@ -45,19 +56,19 @@ int main(int argc, char* argv[]){
 		perror("Error associating FIFO in par-shell-terminal");
 		exit(EXIT_FAILURE);
 	}
-	printf("antes do while\n");
+
+	sprintf(terminal, "pid %d\n", getpid());
+
+	if (write(fserv, terminal, strlen(terminal)) < 0) {
+		perror("");
+	    exit(EXIT_FAILURE);
+	}
 
 	while (1) {
 	
 		fgets(my_string, nbytes, stdin);/*verifica se o utilizador escreveu algo */
 
 		if (strcmp(my_string,"stats\n")==0) {
-			printf("entrei no stats\n");
-			//strtok(my_string, "\n");
-			//strcat(my_string, " ");
-			//strcat(my_string,pipeout);
-			//strcat(my_string, "\n");
-			printf("%s\n",my_string );
 
 			if((sprintf(my_string, "stats %s\n", pipeout)) <0){
 				perror("Error at sprintf");
@@ -69,36 +80,39 @@ int main(int argc, char* argv[]){
 				perror("Error creating FIFO");
 				exit(EXIT_FAILURE);
 			}
-			
-			if( write(fserv,my_string,strlen(my_string)) < 0){
+
+			if(write(fserv,my_string,strlen(my_string))< 0) {
 				perror("Error writing stream");
 				exit(EXIT_FAILURE);
 			}
 
-			printf("%s\n",my_string );
-			printf("pipeout:%s\n",pipeout );
 			if((fclient = open(pipeout, O_RDONLY)) <0 ){
 				perror("Error associating FIFO in par-shell");
 				exit(EXIT_FAILURE);
 			}
 
-			printf("escrevi para a par-shell\n");
-			printf("abri e vou ler\n");
-			printf("%s-1\n",message );
-
 			if( read(fclient,message,200) < 0){
 				perror("Error writing stream");
 				exit(EXIT_FAILURE);
 			}
-			printf("message:%s\n",message);
-			unlink(pipeout);
+			printf("%s\n",message);
+
+			continue;
 		}
 		if (strcmp(my_string,"exit\n")==0) {
+			char msg2[DIM];
+			sprintf(msg2, "remove %d\n", getpid());
+			
+			if (write(fserv, msg2, strlen(msg2)) < 0) {
+				perror("Error writing stream");
+	    		exit(EXIT_FAILURE);
+			}
+			
 			unlink(pipeout);
 			break;
 		}
 		if (strcmp(my_string,"exit-global\n")==0) {
-			printf("vou escrever no pipe\n");
+
 			if( write(fserv,my_string,strlen(my_string)) < 0){
 				perror("Error writing stream");
 				exit(EXIT_FAILURE);
@@ -107,6 +121,7 @@ int main(int argc, char* argv[]){
 			break;
 		}
 		else {
+			
 			if( write(fserv,my_string,strlen(my_string)) < 0){
 				perror("Error writing stream");
 				exit(EXIT_FAILURE);

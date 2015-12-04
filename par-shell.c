@@ -41,7 +41,7 @@ Variaveis Globais
 
 char **argVector, buffer[50];
 FILE *fp;
-int PID, TID, num_filhos=0, status=0, flag=0, total_time, iteracao;
+int PID, TID, num_filhos=0, status=0, flag=0, total_time, iteracao, list_terminal[DIM]={0};
 pthread_t tid[1];/*cria um vetor com as tarefas a criar*/
 pthread_mutex_t mutex, cond_mutex;/*trinco*/
 pthread_cond_t semFilhos, numProcessos;
@@ -215,6 +215,18 @@ void *tarefaMonitora(){ /*Tarefa responsável por monitorizar os tempos de execu
 	}
 }
 
+	void killTerminais(){
+		
+		int i;
+		//signal (SIGINT, SIG_IGN);
+		for (i=0;i<DIM;i++){
+			if (list_terminal[i]!=0){
+				kill(list_terminal[i], SIGKILL);
+			}
+		}
+		exit(EXIT_SUCCESS);
+}
+
 /*
 Main thread
 */
@@ -226,6 +238,8 @@ int main(int argc, char* argv[]){
 	list = lst_new(); /*cria uma lista onde é guardado o PID e o status dos processos*/
 	
 	argVector = (char**) malloc(NARGUMENTOS*sizeof(char*));
+
+	signal (SIGINT, killTerminais);
 
 	if(pthread_mutex_init(&mutex,NULL)) { /*inicializa o trinco*/
 		perror("Error at mutex initialization");
@@ -252,14 +266,12 @@ int main(int argc, char* argv[]){
 		perror("Error creating FIFO");
 		exit(EXIT_FAILURE);
 	}
-	printf("main4\n");
+
 	if( (fserv=open(myfifo,O_RDONLY)) < 0) {
 		perror("Error associating FIFO in par-shell");
 		exit(EXIT_FAILURE);
 	}
-	printf("main5\n");
 
-	printf("main1\n");
 	close(0);
 	dup(fserv);
 
@@ -272,6 +284,35 @@ int main(int argc, char* argv[]){
 		printf("mais uma ficha mais uma volta\n");
 		if(readLineArguments(argVector, NARGUMENTOS)>0){
 			
+			if(strncmp(argVector[0], "pid",3)==0){
+				
+				int i ;
+				for (i=0 ;i<DIM;i++){
+					if (list_terminal[i]==0){
+						list_terminal[i]=(atoi(argVector[1]));
+						printf("vou guardar %d\n",list_terminal[i]);
+						break;
+					}
+				}
+				free(argVector[0]);
+	
+				continue;
+			}
+
+
+			if(strncmp(argVector[0], "remove",6)==0){
+				int i ;
+				for (i=0 ;i<DIM;i++){
+					if (list_terminal[i]==(atoi(argVector[1]))){
+						printf("vou apagar %d\n",list_terminal[i]);
+						list_terminal[i]=0;
+						break;
+					}
+				}
+				free(argVector[0]);
+
+				continue;
+			}
 
 			if(strcmp(argVector[0], EXIT_COMMAND)==0){
 
@@ -318,18 +359,16 @@ int main(int argc, char* argv[]){
 
 
 			if(strncmp(argVector[0], STATS_COMMAND,5)==0){
-		    	/*temos de mandar o numero de filhos e ler o tempo do ficheiro*/
 		    	char my_string[50];
-		    	printf("argvector:%s\n",argVector[1] );
 
 				if( (fclient=open(argVector[1],O_WRONLY)) < 0) {
 					perror("Error associating FIFO in par-shell");
 					exit(EXIT_FAILURE);
 				}
 				verificaFormato();
-		    	printf("%d %d\n", total_time, num_filhos );
+
 		    	sprintf(my_string, "Number of processes: %d total time: %d", num_filhos, total_time);
-		    	printf("string:%s\n",my_string );
+
 		    	if( write(fclient,my_string,strlen(my_string)) < 0){
 					perror("Error writing stream");
 					exit(EXIT_FAILURE);
@@ -371,17 +410,17 @@ int main(int argc, char* argv[]){
 
 		  	insert_new_process(list, PID, time(NULL));/*insere na lista o PID  e o tempo inicial do processo filho*/
 		  	mutex_unlock(&mutex);
-		  	verificaFormato();
-		  	printf("%d %d %d\n", total_time, num_filhos,PID );
+		  	
 		  	condition_signal(&semFilhos);  /*da signal para a tarefa monitora desbloquear */
 		  	
 		  	free(argVector[0]);
+		}
 	     
 
-		//else{
-	  	//	printf("Please insert a valid argument!\n");
-		//}
+		else{
+	  		printf("Please insert a valid argument!\n");
 		}
+		
 	}
 }
 
