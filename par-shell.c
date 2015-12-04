@@ -39,9 +39,9 @@ Sistemas Operativos
 Variaveis Globais 
 */
 
-char **argVector, buffer[50];
+char **argVector, buffer[50], my_string[50];
 FILE *fp;
-int PID, TID, num_filhos=0, status=0, flag=0, total_time, iteracao, list_terminal[DIM]={0};
+int PID, TID, num_filhos=0, status=0, flag=0, total_time, iteracao, list_terminal[DIM]={0}, i, val;
 pthread_t tid[1];/*cria um vetor com as tarefas a criar*/
 pthread_mutex_t mutex, cond_mutex;/*trinco*/
 pthread_cond_t semFilhos, numProcessos;
@@ -78,6 +78,13 @@ void condition_signal(pthread_cond_t* condition) {
     perror("Error signaling on condition");
     exit(EXIT_FAILURE);
   }
+}
+
+void pipeW(int fd, char *buffer, size_t count ) {
+	if( write(fd,buffer,count) < 0){
+		perror("Error writing stream");
+		exit(EXIT_FAILURE);
+	}
 }
 
 /* 
@@ -218,7 +225,6 @@ void *tarefaMonitora(){ /*Tarefa responsável por monitorizar os tempos de execu
 	void killTerminais(){
 		
 		int i;
-		//signal (SIGINT, SIG_IGN);
 		for (i=0;i<DIM;i++){
 			if (list_terminal[i]!=0){
 				kill(list_terminal[i], SIGKILL);
@@ -282,7 +288,8 @@ int main(int argc, char* argv[]){
 			exit(EXIT_FAILURE);
 		}*/
 		printf("mais uma ficha mais uma volta\n");
-		if(readLineArguments(argVector, NARGUMENTOS)>0){
+		
+		if((val=readLineArguments(argVector, NARGUMENTOS))>0) {
 			
 			if(strncmp(argVector[0], "pid",3)==0){
 				
@@ -290,7 +297,6 @@ int main(int argc, char* argv[]){
 				for (i=0 ;i<DIM;i++){
 					if (list_terminal[i]==0){
 						list_terminal[i]=(atoi(argVector[1]));
-						printf("vou guardar %d\n",list_terminal[i]);
 						break;
 					}
 				}
@@ -304,7 +310,6 @@ int main(int argc, char* argv[]){
 				int i ;
 				for (i=0 ;i<DIM;i++){
 					if (list_terminal[i]==(atoi(argVector[1]))){
-						printf("vou apagar %d\n",list_terminal[i]);
 						list_terminal[i]=0;
 						break;
 					}
@@ -328,6 +333,17 @@ int main(int argc, char* argv[]){
 			    	exit(EXIT_FAILURE);
 			    }
 			    
+			    for (i=0 ;i<DIM;i++){
+			    	if (list_terminal[i] != 0) {
+						sprintf(my_string, "par-shell-%d", list_terminal[i]);
+						printf("vou fechar %d\n",list_terminal[i]);
+						sprintf(my_string, "par-shell-%d", list_terminal[i]);
+						kill(list_terminal[i], SIGKILL);
+						unlink(my_string);
+					}
+					
+				}
+
 			    lst_print(list);/*imprime a lista dos processos filho*/
 			    lst_destroy(list);/*apaga todos os elementos da lista*/
 
@@ -369,10 +385,8 @@ int main(int argc, char* argv[]){
 
 		    	sprintf(my_string, "Number of processes: %d total time: %d", num_filhos, total_time);
 
-		    	if( write(fclient,my_string,strlen(my_string)) < 0){
-					perror("Error writing stream");
-					exit(EXIT_FAILURE);
-				}
+		    	pipeW(fclient,my_string,strlen(my_string));
+		    
 				free(argVector[0]);
 				continue;
 			}
@@ -415,7 +429,13 @@ int main(int argc, char* argv[]){
 		  	
 		  	free(argVector[0]);
 		}
-	     
+	    
+	    else if (val < 0) {
+	    	if( (fserv=open(myfifo,O_RDONLY)) < 0) {
+				perror("Error associating FIFO in par-shell");
+				exit(EXIT_FAILURE);
+			}
+	    }
 
 		else{
 	  		printf("Please insert a valid argument!\n");

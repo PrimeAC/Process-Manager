@@ -1,3 +1,0 @@
-fibonacci 20000
-fibonacci 10
-exit
