@@ -141,22 +141,23 @@ void removeProcess(int PID) {
 	Link foundProcess, previousProcess;
 
 	for (foundProcess = Head, previousProcess = NULL; foundProcess != NULL && foundProcess -> item -> PID != PID;
-			previousProcess = foundProcess, foundProcess = foundProcess -> next);
-	
+			previousProcess = foundProcess, foundProcess = foundProcess -> next) ;	
 	if(foundProcess == NULL) {
 		printf("Process %d does not exist\n", PID);
 		return;
 	}
 	printf("O PID:%d foi removido\n", PID);
 
-	if(Head == foundProcess)
+	if(Head == foundProcess){
 		Head = foundProcess -> next;
-	else 
+	}
+	else{ 
 		previousProcess -> next = foundProcess -> next;
-	if(foundProcess -> next == NULL)
+	}
+	if(foundProcess -> next == NULL) {
 		Tail = previousProcess; 
+	}
 	
 	free(foundProcess -> item);
-	free(foundProcess);
+	free(foundProcess);	
 }
-

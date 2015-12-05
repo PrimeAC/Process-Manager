@@ -18,7 +18,8 @@ Sistemas Operativos
 #define LOGFILE "log.txt"
 #define EXIT_COMMAND "exit-global"
 #define STATS_COMMAND "stats"
-#define DIM 20
+#define DIM 50
+#define PERMISSOOES 0777
 
 
 #include <stdio.h>
@@ -40,7 +41,7 @@ Variaveis Globais
 */
 Link Head=NULL, Tail=NULL;
 
-char **argVector, buffer[50], my_string[50];
+char **argVector, buffer[DIM], my_string[DIM];
 FILE *fp;
 int PID, TID, num_filhos=0, status=0, flag=0, total_time, iteracao, i, val;
 pthread_t tid[1];/*cria um vetor com as tarefas a criar*/
@@ -113,15 +114,17 @@ void FileManager(int pid, int exec_time){
 
 void verificaFormato(){
 	int i=0, pid_aux, exec_time_aux;
-	char line[60];
+	char line[DIM];
 
 	rewind(fp);
+
 	if (fgetc(fp)==EOF){ /*se o ficheiro estiver vazio*/
 		return;
 	}
 
 	rewind(fp);
-	while( fgets (line, 60, fp)!=NULL ) { /*verifica se esta na ultima linha*/
+
+	while( fgets (line, DIM, fp)!=NULL ) { /*verifica se esta na ultima linha*/
 		if(i==0){
 			if(sscanf(line, "iteracao %d", &iteracao)!=0){
 				i++;
@@ -168,6 +171,7 @@ void *tarefaMonitora(){ /*Tarefa responsável por monitorizar os tempos de execu
 	printf("Tarefa monitora inicializada!\n");
 
 	fp=fopen(LOGFILE, "a+");
+
 	if (fp==NULL){
 		perror("Error opening/creating file");
 		exit(EXIT_FAILURE);
@@ -200,8 +204,6 @@ void *tarefaMonitora(){ /*Tarefa responsável por monitorizar os tempos de execu
 	         
 	          	PID=wait(&status);/*aguarda que os processos filhos terminem*/ 
 
-	      		
-
 	         	if(PID<0){/*verifica se houve erro fatal no processo*/
 	      			perror("Error at child waiting");
 	            	continue;
@@ -213,26 +215,32 @@ void *tarefaMonitora(){ /*Tarefa responsável por monitorizar os tempos de execu
 		            FileManager(PID,get_execution_time(list,PID)); /*escreve no ficheiro */
 		            mutex_unlock(&mutex);
 	          	}
-
 		        mutex_lock(&mutex);
 		        num_filhos--;
 		        mutex_unlock(&mutex);
+
 	      		condition_signal(&numProcessos); /*asinala que terminou um processo */
 	      	}
 	    }
 	}
 }
-
+/*
+Funcao auxiliar para limpeza dos terminais
+*/
 void killTerminais(){
 	
 	while(Head != NULL) {
-		if (kill(Head->item->PID, SIGKILL) <0) {
+		if (kill(Head->item->PID, SIGKILL) < 0) {
 			perror("Error sending kill to process");
 			exit(EXIT_FAILURE);
 		}
-
 		removeProcess(Head->item->PID);
 	}
+}
+
+void sigKill() {
+	printf("\nSIGINT detetado!\n");
+	killTerminais();
 	exit(EXIT_SUCCESS);
 }
 
@@ -241,28 +249,28 @@ Main thread
 */
 int main(int argc, char* argv[]){
 	int fserv, fclient;
-	char *myfifo = "par-shell-in";
-	//char my_string[NARGUMENTOS];
+	char *myfifo = "/tmp/par-shell-in";
+
 	
 	list = lst_new(); /*cria uma lista onde é guardado o PID e o status dos processos*/
 
-	initialize();
+	initialize();/*inicializa a lista que gurda o PID dos terminais a executar*/
 	
 	argVector = (char**) malloc(NARGUMENTOS*sizeof(char*));
 
-	signal (SIGINT, killTerminais);
+	signal (SIGINT, sigKill);/*atribui ao signal do tipo SIGINT, o metodo killTerminais*/
 
 	if(pthread_mutex_init(&mutex,NULL)) { /*inicializa o trinco*/
 		perror("Error at mutex initialization");
 		exit(EXIT_FAILURE);
 	}
 
-	if(pthread_cond_init(&semFilhos,NULL)) {
+	if(pthread_cond_init(&semFilhos,NULL)) {/*inicializa o semaforo*/
 		perror("Error at initialization of condition variable: semFilhos");
 		exit(EXIT_FAILURE);
 	}
 
-	if(pthread_cond_init(&numProcessos, NULL)) {
+	if(pthread_cond_init(&numProcessos, NULL)) {/*inicializa o semaforo*/
 		perror("Error at initialization of condition variable: numProcessos");
 		exit(EXIT_FAILURE);
 	}
@@ -273,7 +281,7 @@ int main(int argc, char* argv[]){
 	}
 	unlink(myfifo);
 
-	if (mkfifo (myfifo, 0777) < 0) {
+	if (mkfifo (myfifo, PERMISSOOES) < 0) {
 		perror("Error creating FIFO");
 		exit(EXIT_FAILURE);
 	}
@@ -283,33 +291,35 @@ int main(int argc, char* argv[]){
 		exit(EXIT_FAILURE);
 	}
 
-	close(0);
-	dup(fserv);
+	if(close(0) < 0) {/*fecha o stdin*/
+		perror("Error closing stdin");
+		exit(EXIT_FAILURE);
+	}
+
+	if(dup(fserv) < 0) {/*a par-shell passa a receber os comandos do pipe (fserv)*/
+		perror("Error creating a copy of the file descriptor");
+		exit(EXIT_FAILURE);
+	}
 
 	while(1){
-
-		printf("mais uma ficha mais uma volta\n");
 		
 		if((val=readLineArguments(argVector, NARGUMENTOS))>0) {
 			
-			if(strncmp(argVector[0], "pid",3)==0){
+			if(strncmp(argVector[0], "pid",3)==0){ /*verifica se foi inicializado um novo terminal*/
 				
-				insertProcess(createProcess(atoi(argVector[1])));
+				insertProcess(createProcess(atoi(argVector[1])));/*insere o pid de um novo terminal na lista*/
 				free(argVector[0]);
-	
 				continue;
 			}
 
-
-			if(strncmp(argVector[0], "remove",6)==0){
+			if(strncmp(argVector[0], "remove",6)==0){ /*verifica se foi pedido a eliminacao de um pid da lista*/
 				
-				removeProcess(atoi(argVector[1]));
+				removeProcess(atoi(argVector[1]));/*remove o pid da lista de terminais em execucao*/
 				free(argVector[0]);
-
 				continue;
 			}
 
-			if(strcmp(argVector[0], EXIT_COMMAND)==0){
+			if(strcmp(argVector[0], EXIT_COMMAND)==0){/*verifica se foi acionado o comando de exit-global*/
 
 			    mutex_lock(&mutex);
 			    flag=1;/*memoriza o acionamento do comando exit*/
@@ -323,11 +333,9 @@ int main(int argc, char* argv[]){
 			    	exit(EXIT_FAILURE);
 			    }
 			    
-			    killTerminais();
+			    killTerminais();/*"mata" os terminais ordeiramente*/
 				unlink(my_string);
 					
-				
-
 			    lst_print(list);/*imprime a lista dos processos filho*/
 			    lst_destroy(list);/*apaga todos os elementos da lista*/
 
@@ -351,25 +359,28 @@ int main(int argc, char* argv[]){
 			    	perror("Error ate destruction of condition: numProcessos");
 			    	exit(EXIT_FAILURE);
 			    }
+
 			    close(fserv);
 			    close(fclient);
 			    unlink(myfifo);
 			    exit(EXIT_SUCCESS);/*termina o processo pai*/
 			}
 
-
-			if(strncmp(argVector[0], STATS_COMMAND,5)==0){
+			if(strncmp(argVector[0], STATS_COMMAND,5)==0){/*verifica se foi pedido o comando stats*/
 		    	char my_string[50];
 
 				if( (fclient=open(argVector[1],O_WRONLY)) < 0) {
 					perror("Error associating FIFO in par-shell");
 					exit(EXIT_FAILURE);
 				}
-				verificaFormato();
+				verificaFormato();/*atializa o valor da variavel total_time*/
 
-		    	sprintf(my_string, "Number of processes: %d total time: %d", num_filhos, total_time);
+		    	if (sprintf(my_string, "Number of processes: %d total time: %d", num_filhos, total_time) < 0) {
+		    		perror("Error writing characters to string");
+		    		exit(EXIT_FAILURE);
+		    	}
 
-		    	pipeW(fclient,my_string,strlen(my_string));
+		    	pipeW(fclient,my_string,strlen(my_string));/*escreve no pipe para a par-shell-terminal o stats atual*/
 		    
 				free(argVector[0]);
 				continue;
@@ -388,10 +399,20 @@ int main(int argc, char* argv[]){
 			    }
 
 			    else if(PID==0){/*processo filho*/
-				    close(1);
-				    sprintf(buffer, "par-shell-out-%d.txt", getpid());
+				    if(close(1) < 0) {/*fecha o stdin*/
+						perror("Error closing stdout");
+						exit(EXIT_FAILURE);
+					}
+
+				    if (sprintf(buffer, "par-shell-out-%d.txt", getpid()) < 0) {
+				    	perror("Error writing characters to string");
+		    			exit(EXIT_FAILURE);
+				    }
 				
-				    open(buffer, O_WRONLY | O_CREAT, 0777);
+				    if(open(buffer, O_WRONLY | O_CREAT, PERMISSOOES) < 0) {
+				    	perror("Error creating/writing to pipe");
+				    	exit(EXIT_FAILURE);
+				    }
 		
 					if(execv(argVector[0],argVector)<0){ /*verifica se ocorreu um erro a correr o executavel*/
 
@@ -423,8 +444,7 @@ int main(int argc, char* argv[]){
 
 		else{
 	  		printf("Please insert a valid argument!\n");
-		}
-		
+		}		
 	}
 }
 
