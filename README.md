@@ -12,6 +12,6 @@ No Installation required.
 
 # Execution
 Run the following commands: 
-	* `make` 
-	* `make fiboncci`
-	* `./par-shell`
+* `make` 
+* `make fibonacci`
+* `./par-shell`
